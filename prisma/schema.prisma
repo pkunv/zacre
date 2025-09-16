@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  role         String?
+  banned       Boolean?  @default(false)
+  banReason    String?
+  banExpires   DateTime?
+  createdPages Page[]    @relation("PageCreatedBy")
+  updatedPages Page[]    @relation("PageUpdatedBy")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+model ParameterType {
+  key                    String                  @id @unique
+  configParameters       ConfigParameter[]
+  layoutModuleParameters LayoutModuleParameter[]
+
+  @@map("parameter_type")
+}
+
+model ConfigParameter {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type ParameterType @relation(fields: [key], references: [key], onDelete: Cascade)
+
+  @@map("config_parameter")
+}
+
+model Module {
+  id           String         @id @default(uuid())
+  shortName    String         @unique
+  name         String
+  description  String
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  LayoutModule LayoutModule[]
+}
+
+model LayoutModuleParameter {
+  id             String @id @default(uuid())
+  key            String
+  value          String
+  layoutModuleId String
+
+  layoutModule LayoutModule  @relation(fields: [layoutModuleId], references: [id], onDelete: Cascade)
+  parameter    ParameterType @relation(fields: [key], references: [key], onDelete: Cascade)
+
+  @@map("layout_module_parameter")
+}
+
+model LayoutModule {
+  id         String                  @id @default(uuid())
+  layoutId   String
+  moduleId   String
+  layout     Layout                  @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  module     Module                  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  parameters LayoutModuleParameter[]
+
+  @@map("layout_module")
+}
+
+model Layout {
+  id          String         @id @default(uuid())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  title       String
+  description String
+  isActive    Boolean        @default(true)
+  isDeleted   Boolean        @default(false)
+  isPublic    Boolean        @default(false)
+  isPublished Boolean        @default(false)
+  pages       Page[]         @relation("LayoutPage")
+  modules     LayoutModule[]
+}
+
+model Page {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  url         String   @unique
+  layoutId    String
+  description String
+  isActive    Boolean  @default(true)
+  createdById String
+  updatedById String
+  layout      Layout   @relation("LayoutPage", fields: [layoutId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation("PageCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  updatedBy   User     @relation("PageUpdatedBy", fields: [updatedById], references: [id], onDelete: Cascade)
+}

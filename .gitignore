@@ -1,0 +1,13 @@
+node_modules
+dist
+public/client.bundle.js
+public/client.bundle.min.js
+public/client.bundle.min.js.map
+public/style.css
+.env
+public/main-*.js
+public/main-*.js.map
+public/main-*.js.meta.json
+out/
+generated
+.DS_Store
