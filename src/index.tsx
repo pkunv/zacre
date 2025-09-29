@@ -1,5 +1,6 @@
 import { layoutModulesRouter } from "@/api/layout-modules";
-import { auth } from "@/auth";
+import { auth, Session } from "@/auth";
+import { authMiddleware } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { env } from "@/lib/server/env";
 import { logMessage, serverLog } from "@/lib/server/log";
@@ -7,16 +8,25 @@ import { getPage, pageIncludes, renderPage } from "@/lib/server/page";
 import { createMiddleware, RouterRequest } from "@/lib/server/typed-router";
 import { toNodeHandler } from "better-auth/node";
 import compression from "compression";
+import cors from "cors";
 import fs from "fs/promises";
 import path from "path";
-import express, { RequestHandler } from "ultimate-express";
+import express, { Request, RequestHandler, Response } from "ultimate-express";
 
 export const app = express();
+
+app.use(serverLog as unknown as RequestHandler);
 app.use(compression() as unknown as RequestHandler);
 app.all("/api/auth/*", toNodeHandler(auth));
-app.use(serverLog as unknown as RequestHandler);
+
 app.use(express.static(path.join(process.cwd(), "public")));
-app.use(express.json());
+app.use(
+	cors({
+		origin: `http://localhost`, // Replace with your frontend's origin
+		methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
+		credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+	}),
+);
 
 export let pages = await db.page.findMany({
 	include: pageIncludes,
@@ -58,24 +68,32 @@ async function mountPages() {
 		};
 		await fs.writeFile(path.join(zacreDir, `${randomFilename}.html`), html);
 		*/
-		app.get(page.url, async (req, res) => {
-			const perf = performance.now();
+		app.get(
+			page.url,
+			// @ts-ignore
+			(req: Request & { auth: Session | null }, res: Response, next: NextFunction) => {
+				authMiddleware(req, res, next, page.role || undefined);
+			},
+			// @ts-ignore
+			async (req: RouterRequest, res) => {
+				const perf = performance.now();
 
-			const url = req.url;
-			const page = await getPage(url);
-			logMessage({
-				functionName: "getPage",
-				message: `Getting page ${req.url} in ${performance.now() - perf}ms`,
-			});
-			const html = await renderPage(page, req as RouterRequest);
-			logMessage({
-				functionName: "renderPage",
-				message: `Rendering page ${req.url} in ${performance.now() - perf}ms`,
-			});
-			res.setHeader("Content-Type", "text/html");
-			res.send(html);
-			return;
-		});
+				const url = page.url;
+				const pageData = await getPage({ url: url, req });
+				logMessage({
+					functionName: "getPage",
+					message: `Getting page ${url} in ${performance.now() - perf}ms`,
+				});
+				const html = await renderPage(pageData, req as RouterRequest);
+				logMessage({
+					functionName: "renderPage",
+					message: `Rendering page ${url} in ${performance.now() - perf}ms`,
+				});
+				res.setHeader("Content-Type", "text/html");
+				res.send(html);
+				return;
+			},
+		);
 		/*
 		await fs.writeFile(
 			path.join(zacreDir, "pages-metadata.json"),
@@ -92,6 +110,10 @@ export async function reloadPages() {
 mountPages();
 
 app.get("/api/layout-modules", ...createMiddleware(layoutModulesRouter.getMany));
+
+app.post("/api/layout-modules/:elementId", ...createMiddleware(layoutModulesRouter.action));
+
+app.get("/api/layout-modules/:elementId", ...createMiddleware(layoutModulesRouter.render));
 
 app.listen(env.PORT, () => {
 	logMessage({

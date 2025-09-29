@@ -1,7 +1,7 @@
 import { Session } from "@/auth";
 import { authMiddleware } from "@/lib/server/auth";
 import { validateRequest } from "@/lib/server/validate-request";
-import { NextFunction, Request, RequestHandler, Response } from "ultimate-express";
+import express, { NextFunction, Request, RequestHandler, Response } from "ultimate-express";
 import { AnyZodObject } from "zod/v3";
 
 export type RouterRequest = Request & {
@@ -52,9 +52,12 @@ export function createMiddleware<T extends AnyZodObject>(
 	route: RouteDefinition<T>,
 ): RequestHandler[] {
 	return [
+		express.json(),
 		validateRequest(route.schema),
-		passRoleMiddleware(route.role),
-		authMiddleware as unknown as RequestHandler,
+		// @ts-ignore
+		(req: Request & { auth: Session | null }, res: Response, next: NextFunction) => {
+			authMiddleware(req, res, next, route.role);
+		},
 		route.handler as unknown as RequestHandler,
 	];
 }

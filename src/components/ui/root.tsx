@@ -20,7 +20,7 @@ export async function Root({
 				<title>{configParameters["website.name"].value}</title>
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<link rel="icon" href={configParameters["website.favicon"].value} />
-				<script src={clientBundleFilename} defer />
+				<script src={`/${clientBundleFilename}`} defer />
 				<meta name="description" content={configParameters["website.description"].value} />
 				<meta name="keywords" content={configParameters["website.keywords"].value} />
 				<meta name="author" content={configParameters["website.author"].value} />

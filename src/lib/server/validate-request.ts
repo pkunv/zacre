@@ -5,11 +5,17 @@ export const validateRequest =
 	<T extends AnyZodObject>(schema: T): RequestHandler =>
 	async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const data = await schema.parseAsync({
+			let data = await schema.parseAsync({
 				body: req.body,
 				query: req.query,
 				params: req.params,
 			});
+			if (schema.shape.body === undefined) {
+				data = await schema.parseAsync({
+					query: req.query,
+					params: req.params,
+				});
+			}
 
 			// Set the parsed data on the request object
 			(req as any).parsed = data;

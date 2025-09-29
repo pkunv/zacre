@@ -1,5 +1,6 @@
 import { pages } from "@/index";
 import { ParameterDefinition, ServerModule } from "@/modules/server";
+import { Feature } from "~/generated/prisma/client";
 
 // Define the hero parameters as const for type safety
 export const footerParameters = [
@@ -22,7 +23,7 @@ export const serverFooter: ServerModule<typeof footerParameters> = {
 		"Copyright text and site map with extensions like social media links and Openstreetmap location of your business.",
 	parameters: footerParameters,
 	createdAt: new Date("2025-09-14"),
-	loader: (element) => {
+	render: async ({ element }) => {
 		const copyrightText = element.parameters.copyrightText;
 		const image = element.parameters.image;
 
@@ -58,11 +59,7 @@ export const serverFooter: ServerModule<typeof footerParameters> = {
 		];
 
 		return (
-			<footer
-				class="footer sm:footer-horizontal bg-base-200 text-base-content p-8 h-dvh md:px-24"
-				data-module="footer"
-				data-element-id={element.id}
-			>
+			<footer class="footer sm:footer-horizontal bg-base-200 text-base-content p-8 h-[90dvh] md:px-24">
 				<aside>
 					{image && (
 						<img src={image} alt="Footer image" class="w-full h-fit object-scale-down max-w-48" />
@@ -73,14 +70,22 @@ export const serverFooter: ServerModule<typeof footerParameters> = {
 						Built with Zacre
 					</p>
 				</aside>
-				{pages.map((page) => (
-					<nav>
-						<h6 class="footer-title">Pages</h6>
-						<a class="link link-hover">{page.title}</a>
-					</nav>
-				))}
+
 				<nav>
-					<h6 class="footer-title">Social</h6>
+					<h6 class="footer-title">Pages</h6>
+					{pages
+						.filter(
+							(page) => page.assignedFeature === null || page.assignedFeature === Feature.AUTH,
+						)
+						.map((page) => (
+							<a href={page.url} class="link link-hover">
+								{page.title}
+							</a>
+						))}
+				</nav>
+
+				<nav>
+					<h6 class="footer-title">Contact</h6>
 					<div class="grid grid-flow-col gap-4">
 						{links
 							.filter((link) => link.link !== undefined)

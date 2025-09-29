@@ -83,8 +83,19 @@ model Verification {
   @@map("verification")
 }
 
+enum ParameterTypeEnum {
+  STRING
+  NUMBER
+  JSON
+}
+
 model ParameterType {
   key                    String                  @id @unique
+  type                   ParameterTypeEnum       @default(STRING)
+  isRequired             Boolean                 @default(false)
+  isSelect               Boolean                 @default(false)
+  selectValues           Json?                   @default("null") // should be an array of strings
+  schema                 Json?                   @default("null") // should be a json schema
   configParameters       ConfigParameter[]
   layoutModuleParameters LayoutModuleParameter[]
 
@@ -129,6 +140,8 @@ model LayoutModule {
   id         String                  @id @default(uuid())
   layoutId   String
   moduleId   String
+  x          Int                     @default(0)
+  y          Int                     @default(0)
   layout     Layout                  @relation(fields: [layoutId], references: [id], onDelete: Cascade)
   module     Module                  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   parameters LayoutModuleParameter[]
@@ -143,25 +156,32 @@ model Layout {
   title       String
   description String
   isActive    Boolean        @default(true)
-  isDeleted   Boolean        @default(false)
-  isPublic    Boolean        @default(false)
-  isPublished Boolean        @default(false)
   pages       Page[]         @relation("LayoutPage")
   modules     LayoutModule[]
 }
 
+enum Feature {
+  AUTH
+  ADMIN
+  PRODUCTS
+  BLOG
+}
+
 model Page {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  title       String
-  url         String   @unique
-  layoutId    String
-  description String
-  isActive    Boolean  @default(true)
-  createdById String
-  updatedById String
-  layout      Layout   @relation("LayoutPage", fields: [layoutId], references: [id], onDelete: Cascade)
-  createdBy   User     @relation("PageCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
-  updatedBy   User     @relation("PageUpdatedBy", fields: [updatedById], references: [id], onDelete: Cascade)
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  title           String
+  url             String   @unique
+  layoutId        String
+  description     String
+  isActive        Boolean  @default(true)
+  isLocked        Boolean  @default(false)
+  assignedFeature Feature?
+  role            String?
+  createdById     String
+  updatedById     String
+  layout          Layout   @relation("LayoutPage", fields: [layoutId], references: [id], onDelete: Cascade)
+  createdBy       User     @relation("PageCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  updatedBy       User     @relation("PageUpdatedBy", fields: [updatedById], references: [id], onDelete: Cascade)
 }

@@ -6,6 +6,9 @@ import { PrismaClient } from "~/generated/prisma/client";
 
 const prisma = new PrismaClient();
 export const auth = betterAuth({
+	advanced: {
+		cookiePrefix: "zacre",
+	},
 	plugins: [admin()],
 	emailAndPassword: {
 		enabled: true,

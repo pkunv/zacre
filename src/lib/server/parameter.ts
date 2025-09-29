@@ -18,7 +18,7 @@ export const parameterKeys = [
 export type ParameterKeys = (typeof parameterKeys)[number];
 
 // cached for 24 hours, will be invalidated after update
-const configParameterCache = new Cache<ConfigParameter>(24);
+export const configParameterCache = new Cache<ConfigParameter>(24);
 
 export const getConfigParameter = async (name: ParameterKeys) => {
 	const cachedParameter = configParameterCache.get(name);

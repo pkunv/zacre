@@ -3,3 +3,15 @@
 @plugin "daisyui" {
   themes: all;
 }
+
+/* Chrome, Safari, Edge, Opera */
+.hidden-arrows.input::-webkit-outer-spin-button,
+.hidden-arrows.input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.hidden-arrows.input[type=number] {
+  -moz-appearance: textfield;
+}
