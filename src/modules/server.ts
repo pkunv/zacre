@@ -91,7 +91,7 @@ export type ModuleActionError = {
 	body: { message: string };
 };
 
-export function ActionRedirect({ url, message }: { url: string; message?: string }) {
+export function actionRedirect({ url, message }: { url: string; message?: string }) {
 	return {
 		status: "redirect",
 		message,

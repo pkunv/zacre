@@ -1,7 +1,7 @@
 import { db } from "@/lib/server/db";
 import { insertLayoutModuleMetadata, layoutModuleIncludes } from "@/lib/server/layout";
 import { logMessage } from "@/lib/server/log";
-import { getModuleParameters } from "@/lib/server/parameter";
+import { getLayoutModuleParameters } from "@/lib/server/parameter";
 import { createRoute } from "@/lib/server/typed-router";
 import { ModuleActionError, serverModules } from "@/modules/server";
 import { renderToString } from "preact-render-to-string";
@@ -40,7 +40,7 @@ export const layoutModulesRouter = {
 						...layoutModule,
 						serverModule,
 						// @ts-ignore
-						parameters: getModuleParameters(layoutModule.parameters),
+						parameters: getLayoutModuleParameters(layoutModule),
 					},
 					// @ts-ignore
 					req: req,
@@ -70,11 +70,11 @@ export const layoutModulesRouter = {
 				include: layoutModuleIncludes,
 			});
 
-			const elements = layoutModules.map((module) => {
+			const elements = layoutModules.map((layoutModule) => {
 				return {
-					...module,
-					serverModule: serverModules.find((m) => m.shortName === module.module.shortName),
-					parameters: getModuleParameters(module.parameters),
+					...layoutModule,
+					serverModule: serverModules.find((m) => m.shortName === layoutModule.module.shortName),
+					parameters: getLayoutModuleParameters(layoutModule),
 				};
 			});
 
@@ -123,7 +123,7 @@ export const layoutModulesRouter = {
 
 			const element = {
 				...layoutModule,
-				parameters: getModuleParameters(layoutModule.parameters),
+				parameters: getLayoutModuleParameters(layoutModule),
 				serverModule,
 			};
 			if (!serverModule || !serverModule.action) {

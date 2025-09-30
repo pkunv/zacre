@@ -1,7 +1,8 @@
 import { Cache } from "@/lib/server/cache";
 import { db } from "@/lib/server/db";
+import { RawLayoutModule } from "@/lib/server/layout";
 import { logMessage } from "@/lib/server/log";
-import { ConfigParameter, LayoutModuleParameter } from "~/generated/prisma/client";
+import { ConfigParameter } from "~/generated/prisma/client";
 
 export const parameterKeys = [
 	"website.name",
@@ -76,7 +77,7 @@ export async function initializeParameters() {
 	);
 }
 
-export async function createParameter(name: ParameterKeys, value: string) {
+export async function createConfigParameter(name: ParameterKeys, value: string) {
 	await db.configParameter.upsert({
 		where: { key: name },
 		create: { key: name, value },
@@ -84,10 +85,10 @@ export async function createParameter(name: ParameterKeys, value: string) {
 	});
 }
 
-export function getModuleParameters(parameters: LayoutModuleParameter[]) {
-	const moduleParameters = parameters
+export function getLayoutModuleParameters(layoutModule: RawLayoutModule) {
+	const moduleParameters = layoutModule.parameters
 		.map((parameter) => ({
-			[parameter.key]: parameter.value,
+			[parameter.key.replace(`${layoutModule.module.shortName}.`, "")]: parameter.value,
 		}))
 		.reduce(
 			(acc, parameter) => {

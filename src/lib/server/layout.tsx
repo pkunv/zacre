@@ -8,6 +8,10 @@ export const layoutModuleIncludes = {
 	parameters: true,
 } satisfies Prisma.LayoutModuleInclude;
 
+export type RawLayoutModule = Prisma.LayoutModuleGetPayload<{
+	include: typeof layoutModuleIncludes;
+}>;
+
 export type LayoutElement<T> = Prisma.LayoutModuleGetPayload<{
 	include: typeof layoutModuleIncludes;
 }> & {
@@ -100,7 +104,7 @@ export async function createLayout(params: CreateLayoutParams) {
 		await db.layoutModuleParameter.createMany({
 			data: module.params.map((p) => ({
 				layoutModuleId: layoutModule.id,
-				key: p.key,
+				key: `${module.shortName}.${p.key}`,
 				value: p.value ?? "",
 			})),
 		});

@@ -3,7 +3,7 @@ import { db } from "@/lib/server/db";
 import { createLayout } from "@/lib/server/layout";
 import { logMessage } from "@/lib/server/log";
 import { createPage } from "@/lib/server/page";
-import { createParameter, initializeParameters } from "@/lib/server/parameter";
+import { createConfigParameter, initializeParameters } from "@/lib/server/parameter";
 import { serverModules } from "@/modules/server";
 import { Feature, ParameterTypeEnum } from "~/generated/prisma/client";
 
@@ -34,19 +34,19 @@ async function main() {
 
 	await initializeParameters();
 
-	await createParameter("website.name", "Zacre");
-	await createParameter(
+	await createConfigParameter("website.name", "Zacre");
+	await createConfigParameter(
 		"website.description",
 		"Modular website builder for personal websites, small businesses and more.",
 	);
-	await createParameter(
+	await createConfigParameter(
 		"website.keywords",
 		"zacre, website builder, modular website, personal website, small business website, node.js, kunv, wordpress",
 	);
-	await createParameter("website.author", "Piotr Kuncy (KUNV)");
-	await createParameter("website.logo", "/default-logo.webp");
-	await createParameter("website.favicon", "/favicon.ico");
-	await createParameter("website.theme", "emerald");
+	await createConfigParameter("website.author", "Piotr Kuncy (KUNV)");
+	await createConfigParameter("website.logo", "/default-logo.webp");
+	await createConfigParameter("website.favicon", "/favicon.ico");
+	await createConfigParameter("website.theme", "emerald");
 
 	for (const module of serverModules) {
 		await db.module.upsert({
@@ -69,10 +69,10 @@ async function main() {
 		for (const parameter of module.parameters || []) {
 			await db.parameterType.upsert({
 				where: {
-					key: parameter.key,
+					key: `${module.shortName}.${parameter.key}`,
 				},
 				create: {
-					key: parameter.key,
+					key: `${module.shortName}.${parameter.key}`,
 					type: (parameter as any).type ?? ParameterTypeEnum.STRING,
 					isRequired: (parameter as any).isRequired ?? false,
 					isSelect: (parameter as any).isSelect ?? false,
@@ -141,7 +141,7 @@ async function main() {
 		isActive: true,
 		modules: [
 			{ shortName: "admin-sidebar", x: 0, y: 0, params: [] },
-			{ shortName: "admin-layouts", x: 0, y: 1, params: [] },
+			{ shortName: "admin-layouts", x: 1, y: 0, params: [] },
 		],
 	});
 

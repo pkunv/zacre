@@ -3,7 +3,7 @@ import { Root } from "@/components/ui/root";
 import { pages } from "@/index";
 import { db } from "@/lib/server/db";
 import { insertLayoutModuleMetadata } from "@/lib/server/layout";
-import { getModuleParameters } from "@/lib/server/parameter";
+import { getLayoutModuleParameters } from "@/lib/server/parameter";
 import { RouterRequest } from "@/lib/server/typed-router";
 import { serverModules } from "@/modules/server";
 import { renderToString } from "preact-render-to-string";
@@ -22,6 +22,10 @@ export const pageIncludes = {
 	},
 } satisfies Prisma.PageInclude;
 
+export type RawPage = Prisma.PageGetPayload<{
+	include: typeof pageIncludes;
+}>;
+
 export async function getPage({ url, req }: { url: string; req: RouterRequest }) {
 	const page = pages.find((p) => p.url === url);
 	if (!page) {
@@ -30,12 +34,12 @@ export async function getPage({ url, req }: { url: string; req: RouterRequest })
 		};
 	}
 	const layoutModules = await Promise.all(
-		page.layout.modules.map(async (module) => {
-			const serverModule = serverModules.find((m) => m.shortName === module.module.shortName);
+		page.layout.modules.map(async (layoutModule) => {
+			const serverModule = serverModules.find((m) => m.shortName === layoutModule.module.shortName);
 
 			const element = {
-				...module,
-				parameters: getModuleParameters(module.parameters),
+				...layoutModule,
+				parameters: getLayoutModuleParameters(layoutModule),
 			};
 
 			if (serverModule) {
@@ -47,26 +51,28 @@ export async function getPage({ url, req }: { url: string; req: RouterRequest })
 					// @ts-ignore
 					await serverModule.render({ req, element })
 				) : (
-					<LayoutElementError elementName={module.module.shortName} id={module.id} />
+					<LayoutElementError elementName={layoutModule.module.shortName} id={layoutModule.id} />
 				);
 
 				const serverModuleComponent = insertLayoutModuleMetadata({
-					elementId: module.id,
-					moduleShortName: module.module.shortName,
+					elementId: layoutModule.id,
+					moduleShortName: layoutModule.module.shortName,
 					isLoaderSwappable: serverModule.loader != undefined ? true : false,
 					jsx: serverModuleResult,
 				});
 
 				return {
-					x: module.x,
-					y: module.y,
+					x: layoutModule.x,
+					y: layoutModule.y,
 					jsx: serverModuleComponent,
 				};
 			}
 			return {
-				x: module.x,
-				y: module.y,
-				jsx: <LayoutElementError elementName={module.module.shortName} id={module.id} />,
+				x: layoutModule.x,
+				y: layoutModule.y,
+				jsx: (
+					<LayoutElementError elementName={layoutModule.module.shortName} id={layoutModule.id} />
+				),
 			};
 		}),
 	).then((modules) => modules.sort((a, b) => a.y - b.y));

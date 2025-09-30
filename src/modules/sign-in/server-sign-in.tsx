@@ -1,5 +1,5 @@
 import { configParameterCache } from "@/lib/server/parameter";
-import { ActionRedirect, ParameterDefinition, ServerModule } from "@/modules/server";
+import { actionRedirect, ParameterDefinition, ServerModule } from "@/modules/server";
 
 export const signInParameters = [
 	{ key: "isSignUpEnabled" },
@@ -62,13 +62,13 @@ export const serverSignIn: ServerModule<typeof signInParameters, unknown> = {
 		}
 
 		if (session.user.role === "admin") {
-			return ActionRedirect({
+			return actionRedirect({
 				url: "/admin",
 				message: "Signed in successfully. You will be redirected to the admin panel.",
 			});
 		}
 
-		return ActionRedirect({
+		return actionRedirect({
 			url: "/",
 			message: "Signed in successfully. You will be redirected to the home page.",
 		});

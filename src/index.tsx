@@ -4,7 +4,7 @@ import { authMiddleware } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { env } from "@/lib/server/env";
 import { logMessage, serverLog } from "@/lib/server/log";
-import { getPage, pageIncludes, renderPage } from "@/lib/server/page";
+import { getPage, pageIncludes, RawPage, renderPage } from "@/lib/server/page";
 import { createMiddleware, RouterRequest } from "@/lib/server/typed-router";
 import { toNodeHandler } from "better-auth/node";
 import compression from "compression";
@@ -28,7 +28,7 @@ app.use(
 	}),
 );
 
-export let pages = await db.page.findMany({
+export let pages: RawPage[] = await db.page.findMany({
 	include: pageIncludes,
 });
 
@@ -80,10 +80,6 @@ async function mountPages() {
 
 				const url = page.url;
 				const pageData = await getPage({ url: url, req });
-				logMessage({
-					functionName: "getPage",
-					message: `Getting page ${url} in ${performance.now() - perf}ms`,
-				});
 				const html = await renderPage(pageData, req as RouterRequest);
 				logMessage({
 					functionName: "renderPage",
