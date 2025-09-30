@@ -1,0 +1,38 @@
+---
+description: Back-end structure
+globs:
+alwaysApply: true
+---
+
+Zacre uses ultimate-express (same API as Express.js), better-auth and Prisma for back-end stuff.
+Going from the general view to specifics, we start from `src/index.tsx` where at the start of server process,
+we fetch pages data to the `src/index.tsx -> pages` variable from the Prisma. `pageIncludes` are required for this.
+This supplies us with data needed to render each page to their final HTML form. Whenever we would create a new page
+while running the server, remounting pages would be neccesary.
+We loop through every page and add it into Express `app` variable with a various middleware methods, that can be found
+in `src/lib/server/typed-router.ts`. Typed router uses Zod for validation, divided by params (url params), body (POST json body) and query (GET url search query params). New API methods should be placed in `src/api` directory, and created as an object with various keys that are defined with `createRoute` function, for example:
+
+```
+export const exampleRouter = {
+  get: createRoute({
+    schema: z.object({
+			params: z.object({
+				id: z.string(),
+			}),
+		}),
+    handler: async (req, res) => {
+      const id = req.parsed.id;
+
+      const data = doSomething(id);
+
+      if(!data) {
+        res.status(404).json({status: "error", message: "Not found"});
+        return;
+      }
+
+      res.json(data);
+      return;
+    }
+  })
+}
+```

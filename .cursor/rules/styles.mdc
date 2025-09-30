@@ -1,0 +1,30 @@
+---
+description: Styling modules
+globs:
+alwaysApply: true
+---
+
+- Zacre uses DaisyUI for efficient styling with TailwindCSS. Please refer to its docs if possible.
+
+- Please try to create beautiful elements for modules.
+
+- Use only theme colors.
+
+- Remember to style modules in Zacre in a flexible way, as we don't know for sure if user while making a layout would
+  want modules to be placed in a row (X axis values) (less width) or a column (full width).
+
+- Standard padding and gap values are multiplication of 4.
+
+- Returned JSX Element of loader or render function must be an HTML element, as we insert engine neccesary data attributes later on.
+
+- Every button, link button should have its own icon from Lucide library placed on the left, constructed like this:
+  `<button class="btn"><i data-lucide="pencil" class="w-4 h-4></i>Edit</button>`
+  After adding icon, please double-check if this icon is included in client-side icon initializing
+  function, located in `src/lib/client/icons.ts`.
+
+- Positioning of buttons, links, actions should be on the right (justify-end) of the subject body, such as cards, modals.
+
+- Use semantic HTML whenever possible.
+
+- If there is a possibility that a styled component with JSX would be re-used, it should be a new reusable component inside
+  `src/components/modules-ui` directory, as seen with `src/components/modules-ui/typography.tsx` JSX functions.

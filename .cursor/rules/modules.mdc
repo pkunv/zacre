@@ -1,0 +1,43 @@
+---
+description: Module creation, structure and definition
+globs:
+alwaysApply: true
+---
+
+Modules of Zacre are located in `src/modules` within its own folders.
+Modules name should be straight forward, to easily tell what their function is.
+Single module should do only one thing, but parameters can change how this module is presented or what type of content is rendered.
+For example, we have a _navbar_ module that does one thing: It sits on the top of every layout it is in and shows minimal navigation and
+shortcuts.
+Server module types are available in `src/server.ts`.
+Every module has a back-end component (specified as a file in its folder with 'server-' prefix) that needs to be appended
+into `src/server.ts -> serverModules[]` array variable. Back-end file is the main part of the module that in its object defines:
+
+- Parameters of a module
+  Parameters (satisfies `src/server.ts -> ParameterDefinition` type) are a set of parameters that change how modules
+  look and what their final content is. For example, _hero_ module has a _primaryButtonText_ and _primaryButtonLink_ parameters
+  that are optional string parameters that when defined, create a <button> with specified content.
+  Parameters are inserted into the Prisma database with its module name when seeding it, inside `prisma/seed.ts` seed function in `ParameterType` model, for example key for module parameter inside Prisma database might be `hero.primaryButtonLink`.
+  It is crucial to later enable a specific scope of a module (is it optional, does it have a set of selectable options, etc.)
+
+- Unique short name
+  Unique identifier that is consistent with module folder name and module file names, for example:
+  `src/modules/example-module/server-example-module.tsx`, `src/modules/example-module/client-example-module.ts`
+- Verbose description
+- Date of creation
+- Loader function that returns a preloader, "Suspense" JSX that is helpful to build crucial, skeleton UI before swapping for a render function result that can be async (Express request and layout module element are available upon deconstruction from object), optional
+- Render async function that is final JSX sent to the user, where you can fetch some data and map through it to show data from database for example
+- Data function that can be used to transfer data to the client, optional
+- Action function that can be fired on a form inside the module, used with client side function `executeModuleAction()`, helpful with forms
+  and interactions with a module. Action can also result in a redirect to a different page using `actionRedirect()` function.
+
+On the other hand we have client-side code that is optional, but required in situations where we need some sort of interaction. It's specified by `client-` prefix inside module folder.
+Client module is part that is handled on the client-side, with its root in `src/modules/client.ts` where client modules need to be appended into `clientModules` array. In this file we can find types for ClientModule:
+
+- shortName needs to be the exact same as in server module
+- hasNoServerData flag when we shouldn't call for `serverModule.data()`
+- clientInit function that is fired when module is found and mounted at the DOMContentLoaded event, as seen in `src/client.ts` main file.
+
+Modules are placed inside layouts, and singular module in a layout is called a _layout module_ (or _element_). It is a fulfilled object with specified parameters and X and Y placement, with specific Prisma includes that can be traced into a type in `src/lib/server/layout.tsx`.
+
+It is important to remember to stylize HTML elements in a module render to be flexible, as modules can be placed on the whole width of the page, but also be placed in a row by X axis with flex row, when layout module has X value more than zero.
