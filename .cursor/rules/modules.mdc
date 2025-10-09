@@ -38,6 +38,8 @@ Client module is part that is handled on the client-side, with its root in `src/
 - hasNoServerData flag when we shouldn't call for `serverModule.data()`
 - clientInit function that is fired when module is found and mounted at the DOMContentLoaded event, as seen in `src/client.ts` main file.
 
+- Inclusion of data attributes like `data-element-id`, `data-module` is not neccesary, as they are appended on the fly within the engine.
+
 Modules are placed inside layouts, and singular module in a layout is called a _layout module_ (or _element_). It is a fulfilled object with specified parameters and X and Y placement, with specific Prisma includes that can be traced into a type in `src/lib/server/layout.tsx`.
 
 It is important to remember to stylize HTML elements in a module render to be flexible, as modules can be placed on the whole width of the page, but also be placed in a row by X axis with flex row, when layout module has X value more than zero.

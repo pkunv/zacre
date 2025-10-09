@@ -2,6 +2,7 @@ import { Cache } from "@/lib/server/cache";
 import { db } from "@/lib/server/db";
 import { RawLayoutModule } from "@/lib/server/layout";
 import { logMessage } from "@/lib/server/log";
+import { RouterRequest } from "@/lib/server/typed-router";
 import { ConfigParameter } from "~/generated/prisma/client";
 
 export const parameterKeys = [
@@ -98,4 +99,50 @@ export function getLayoutModuleParameters(layoutModule: RawLayoutModule) {
 		);
 
 	return moduleParameters;
+}
+
+export function getRefererRequestParameters({
+	req,
+	pageUrl,
+}: {
+	req: RouterRequest;
+	pageUrl: string;
+}) {
+	const url = pageUrl;
+	const referer = req.headers.referer;
+	if (!referer) {
+		return {};
+	}
+
+	// Extract pathname from referer URL
+	const refererUrl = new URL(referer);
+	const refererPath = refererUrl.pathname;
+
+	// Split both paths into segments
+	const refererSegments = refererPath.split("/").filter((segment) => segment !== "");
+	const urlSegments = url.split("/").filter((segment) => segment !== "");
+
+	// Check if the paths have the same number of segments
+	if (refererSegments.length !== urlSegments.length) {
+		return {};
+	}
+
+	// Extract parameters
+	const parameters: Record<string, string> = {};
+
+	for (let i = 0; i < urlSegments.length; i++) {
+		const urlSegment = urlSegments[i];
+		const refererSegment = refererSegments[i];
+
+		// If the URL segment starts with ':', it's a parameter
+		if (urlSegment.startsWith(":")) {
+			const paramName = urlSegment.slice(1); // Remove the ':' prefix
+			parameters[paramName] = refererSegment;
+		} else if (urlSegment !== refererSegment) {
+			// If segments don't match and it's not a parameter, paths don't match
+			return {};
+		}
+	}
+
+	return parameters;
 }

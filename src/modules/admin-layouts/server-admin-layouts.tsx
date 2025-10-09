@@ -17,25 +17,6 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 	loader: ({ element }) => {
 		return (
 			<div class="w-full h-dvh overflow-auto p-4 flex flex-col gap-4 justify-start">
-				<div
-					class="flex-col gap-4 card bg-base-100 hidden shadow-sm w-full max-w-3xl"
-					id="layout-template"
-				>
-					<div class="card-body">
-						<H2 className="layout-name card-title"> </H2>
-						<div class="flex flex-row gap-4 layout-pages-container"></div>
-						<div class="badge badge-ghost hidden" id="layout-page-badge-template">
-							{" "}
-						</div>
-						<p className="layout-description"> </p>
-						<small className="layout-created-at"> </small>
-						<div className="card-actions justify-end">
-							<a className="btn btn-primary btn-edit">
-								<i class="w-4 h-4" data-lucide="pencil"></i>Edit
-							</a>
-						</div>
-					</div>
-				</div>
 				<H1 className="text-left">Layouts</H1>
 				<div class="flex flex-col gap-4 layouts-container skeleton w-full max-w-3xl min-h-96 h-full"></div>
 			</div>

@@ -1,7 +1,8 @@
+import { pages } from "@/index";
 import { db } from "@/lib/server/db";
 import { insertLayoutModuleMetadata, layoutModuleIncludes } from "@/lib/server/layout";
 import { logMessage } from "@/lib/server/log";
-import { getLayoutModuleParameters } from "@/lib/server/parameter";
+import { getLayoutModuleParameters, getRefererRequestParameters } from "@/lib/server/parameter";
 import { createRoute } from "@/lib/server/typed-router";
 import { ModuleActionError, serverModules } from "@/modules/server";
 import { renderToString } from "preact-render-to-string";
@@ -23,6 +24,9 @@ export const layoutModulesRouter = {
 				},
 				include: layoutModuleIncludes,
 			});
+
+			
+
 			if (!layoutModule) {
 				res.status(404).json({ status: "error", message: "Layout module not found" });
 				return;
@@ -34,6 +38,8 @@ export const layoutModulesRouter = {
 				return;
 			}
 
+			const page = pages.find((p) => p.layout.id === layoutModule.layoutId);
+
 			const render = insertLayoutModuleMetadata({
 				jsx: await serverModule.render({
 					element: {
@@ -43,7 +49,11 @@ export const layoutModulesRouter = {
 						parameters: getLayoutModuleParameters(layoutModule),
 					},
 					// @ts-ignore
-					req: req,
+					req: {
+						...req,
+						// @ts-expect-error we don't need to type the request
+						params: getRefererRequestParameters({ req: req as RouterRequest, pageUrl: page.url }),
+					},
 				}),
 				elementId: layoutModule.id,
 				moduleShortName: serverModule.shortName,

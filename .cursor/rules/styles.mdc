@@ -13,7 +13,7 @@ alwaysApply: true
 - Remember to style modules in Zacre in a flexible way, as we don't know for sure if user while making a layout would
   want modules to be placed in a row (X axis values) (less width) or a column (full width).
 
-- Standard padding and gap values are multiplication of 4.
+- Standard padding and gap values are multiplication of 4 tailwindCSS units, for example: `p-4`, `gap-4`.
 
 - Returned JSX Element of loader or render function must be an HTML element, as we insert engine neccesary data attributes later on.
 

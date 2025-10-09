@@ -8,6 +8,7 @@ import {
 	Facebook,
 	Github,
 	Globe,
+	GripVertical,
 	Hourglass,
 	Instagram,
 	LayoutDashboard,
@@ -20,6 +21,7 @@ import {
 	Pencil,
 	Phone,
 	Plus,
+	Save,
 	ShieldAlert,
 	ShoppingBag,
 	Trash,
@@ -56,6 +58,8 @@ export function initIcons() {
 			Lock,
 			Trash,
 			Pencil,
+			GripVertical,
+			Save,
 		},
 	});
 }
