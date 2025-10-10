@@ -40,6 +40,9 @@ export const serverAdminSidebar: ServerModule<typeof adminSidebarParameters, unk
 							/>
 						</a>
 						<li>
+							<a href="/admin/pages">Pages</a>
+						</li>
+						<li>
 							<a href="/admin/layouts">Layouts</a>
 						</li>
 						<li>

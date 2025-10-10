@@ -164,8 +164,7 @@ export function sanitizeParameterValue(value: string) {
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;")
 		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#x27;")
-		.replace(/\//g, "&#x2F;");
+		.replace(/'/g, "&#x27;");
 
 	// Second pass: Remove null bytes and other dangerous characters
 	sanitized = sanitized.replace(/\0/g, "");

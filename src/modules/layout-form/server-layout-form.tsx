@@ -27,6 +27,7 @@ const layoutFormActionSchema = z.object({
 	layoutId: z.string().optional(),
 	title: z.string(),
 	description: z.string(),
+	method: z.enum(["CREATE", "UPDATE", "DELETE"]),
 	modules: z.array(
 		z.object({
 			layoutModuleId: z.string(),
@@ -53,7 +54,7 @@ export const serverLayoutForm: ServerModule<
 	createdAt: new Date("2025-09-22"),
 	loader: ({ element }) => {
 		return (
-			<form class="w-full h-full p-4">
+			<form class="w-full h-dvh overflow-auto p-4 flex flex-col gap-4">
 				<H1 className="text-left skeleton w-24 h-12"> </H1>
 				<div class="card bg-base-100 shadow-sm">
 					<div class="card-body">
@@ -167,11 +168,13 @@ export const serverLayoutForm: ServerModule<
 							data-module-id={layoutModule.moduleId}
 							data-x={layoutModule.x}
 							data-y={layoutModule.y}
-							draggable={true}
 						>
 							<div class="card-body gap-4">
 								{/* Module header with drag handle */}
-								<div class="flex flex-row items-center gap-4 w-full justify-between">
+								<div
+									class="flex flex-row items-center gap-4 w-full justify-between"
+									draggable={true}
+								>
 									<div class="flex flex-row items-center gap-4">
 										<i data-lucide="grip-vertical" class="w-5 h-5 cursor-move drag-handle"></i>
 										<img src="/logo-sm.webp" alt="Module" class="w-8 h-8" />
@@ -309,11 +312,18 @@ export const serverLayoutForm: ServerModule<
 					</button>
 				</div>
 
-				{/* Save button */}
-				<button type="submit" class="btn btn-lg btn-primary">
-					<i class="w-4 h-4" data-lucide="save"></i>
-					Save Layout
-				</button>
+				<div class="flex flex-row w-full justify-end gap-4">
+					{/* Save button */}
+					<button type="submit" class="btn btn-lg btn-primary">
+						<i class="w-4 h-4" data-lucide="save"></i>
+						Save
+					</button>
+					{/* Delete button */}
+					<button type="button" class="btn btn-lg btn-error" id="delete-layout-btn">
+						<i class="w-4 h-4" data-lucide="trash"></i>
+						Delete
+					</button>
+				</div>
 
 				{/* Confirmation modal */}
 				<dialog id="delete-module-modal" class="modal">
@@ -325,6 +335,26 @@ export const serverLayoutForm: ServerModule<
 								Cancel
 							</button>
 							<button type="button" class="btn btn-error" id="confirm-delete-btn">
+								<i class="w-4 h-4" data-lucide="trash"></i>
+								Delete
+							</button>
+						</div>
+					</div>
+					<form method="dialog" class="modal-backdrop">
+						<button>close</button>
+					</form>
+				</dialog>
+
+				{/* Delete layout modal */}
+				<dialog id="delete-layout-modal" class="modal">
+					<div class="modal-box">
+						<h3 class="font-bold text-lg">Confirm Deletion</h3>
+						<p class="py-4">Are you sure you want to delete this layout?</p>
+						<div class="modal-action">
+							<button type="button" class="btn" id="cancel-delete-layout-btn">
+								Cancel
+							</button>
+							<button type="button" class="btn btn-error" id="confirm-delete-layout-btn">
 								<i class="w-4 h-4" data-lucide="trash"></i>
 								Delete
 							</button>
@@ -374,7 +404,26 @@ export const serverLayoutForm: ServerModule<
 	},
 	actionSchema: layoutFormActionSchema as any,
 	action: async ({ element, data, request }) => {
-		const { layoutId, title, description, modules } = data;
+		const { layoutId, title, description, modules, method } = data;
+
+		if (method === "DELETE") {
+			if (!layoutId) {
+				throw new Error("Layout ID is required to delete a layout");
+			}
+			const layout = await db.layout.findUnique({
+				where: { id: layoutId },
+				include: layoutIncludes,
+			});
+			if (!layout) {
+				throw new Error("Layout not found");
+			}
+			if (layout.pages && layout.pages.length > 0) {
+				throw new Error("Layout has pages, cannot delete");
+			}
+			await db.layout.delete({ where: { id: layoutId } });
+			await reloadPages();
+			return actionRedirect({ url: `/admin/layouts`, message: "Layout deleted successfully" });
+		}
 
 		// If layoutId exists, update the layout, otherwise create a new one
 		if (layoutId) {

@@ -1,6 +1,7 @@
 import { LayoutElement } from "@/lib/server/layout";
 import { RouterRequest } from "@/lib/server/typed-router";
 import { serverAdminLayouts } from "@/modules/admin-layouts/server-admin-layouts";
+import { serverAdminPages } from "@/modules/admin-pages/server-admin-pages";
 import { serverAdminSidebar } from "@/modules/admin-sidebar/server-admin-sidebar";
 import { serverFooter } from "@/modules/footer/server-footer";
 import { serverHero } from "@/modules/hero/server-hero";
@@ -70,6 +71,7 @@ export const serverModules = [
 	serverSignIn,
 	serverAdminSidebar,
 	serverAdminLayouts,
+	serverAdminPages,
 	serverLayoutForm,
 ];
 

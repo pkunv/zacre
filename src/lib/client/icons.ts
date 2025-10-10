@@ -5,6 +5,7 @@ import {
 	Box,
 	Check,
 	createIcons,
+	ExternalLink,
 	Facebook,
 	Github,
 	Globe,
@@ -60,6 +61,7 @@ export function initIcons() {
 			Pencil,
 			GripVertical,
 			Save,
+			ExternalLink,
 		},
 	});
 }

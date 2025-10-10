@@ -17,7 +17,12 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 	loader: ({ element }) => {
 		return (
 			<div class="w-full h-dvh overflow-auto p-4 flex flex-col gap-4 justify-start">
-				<H1 className="text-left">Layouts</H1>
+				<div class="flex flex-row gap-4 justify-start">
+					<H1 className="text-left">Layouts</H1>
+					<a className="btn btn-primary" href="/admin/layouts/new">
+						<i class="w-4 h-4" data-lucide="plus"></i>Create layout
+					</a>
+				</div>
 				<div class="flex flex-col gap-4 layouts-container skeleton w-full max-w-3xl min-h-96 h-full"></div>
 			</div>
 		);
@@ -29,7 +34,12 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 
 		return (
 			<div class="w-full h-dvh overflow-auto p-4 flex flex-col gap-4 justify-start">
-				<H1 className="text-left">Layouts</H1>
+				<div class="flex flex-row gap-4 justify-start">
+					<H1 className="text-left">Layouts</H1>
+					<a className="btn btn-primary" href="/admin/layouts/new">
+						<i class="w-4 h-4" data-lucide="plus"></i>Create layout
+					</a>
+				</div>
 				<div class="flex flex-col gap-4 layouts-container w-full max-w-3xl min-h-96 h-full">
 					{layouts.map((layout) => (
 						<div class="flex flex-col gap-4 card bg-base-100 shadow-sm w-full max-w-3xl">

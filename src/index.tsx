@@ -37,6 +37,9 @@ app.use(
 
 export let pages: RawPage[] = await db.page.findMany({
 	include: pageIncludes,
+	where: {
+		isActive: true,
+	},
 });
 
 async function mountPages() {
@@ -46,6 +49,9 @@ async function mountPages() {
 	});
 	pages = await db.page.findMany({
 		include: pageIncludes,
+		where: {
+			isActive: true,
+		},
 	});
 	const pagesMetadata: {
 		[key: string]: {

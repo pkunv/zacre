@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+description: Front-end
+---
+
+- When defining a submit function for a form, please use `validateFormInputs()` from `src/lib/client/validate-form.ts` and try
+  to use best validation schemes for given inputs.

@@ -155,6 +155,16 @@ async function main() {
 		],
 	});
 
+	const adminPagesLayout = await createLayout({
+		title: "Admin pages",
+		description: "Admin pages",
+		isActive: true,
+		modules: [
+			{ shortName: "admin-sidebar", x: 0, y: 0, params: [] },
+			{ shortName: "admin-pages", x: 1, y: 0, params: [] },
+		],
+	});
+
 	await createPage({
 		title: "Home",
 		description: "Home",
@@ -178,7 +188,7 @@ async function main() {
 
 	await createPage({
 		title: "Admin",
-		description: "Admin",
+		description: "Admin panel to manage your website",
 		url: "/admin",
 		role: "admin",
 		layoutId: adminLayoutLayouts.id,
@@ -190,7 +200,7 @@ async function main() {
 
 	await createPage({
 		title: "Layouts",
-		description: "Layouts in admin panel",
+		description: "List of layouts on your website to use in pages",
 		url: "/admin/layouts",
 		role: "admin",
 		layoutId: adminLayoutLayouts.id,
@@ -202,10 +212,34 @@ async function main() {
 
 	await createPage({
 		title: "Edit layout",
-		description: "Edit layout for admin panel",
+		description: "Edit a layout in admin panel",
 		url: "/admin/layouts/:layoutId",
 		role: "admin",
 		layoutId: adminLayoutForm.id,
+		createdById: systemUserId,
+		updatedById: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Create layout",
+		description: "Create a new layout in admin panel",
+		url: "/admin/layouts/new",
+		role: "admin",
+		layoutId: adminLayoutForm.id,
+		createdById: systemUserId,
+		updatedById: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Pages",
+		description: "List of pages on your website",
+		url: "/admin/pages",
+		role: "admin",
+		layoutId: adminPagesLayout.id,
 		createdById: systemUserId,
 		updatedById: systemUserId,
 		isLocked: true,

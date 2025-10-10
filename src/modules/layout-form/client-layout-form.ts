@@ -14,6 +14,14 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 		const confirmDeleteBtn = element.querySelector("#confirm-delete-btn") as HTMLButtonElement;
 		const addModuleBtn = element.querySelector("#add-module-btn") as HTMLButtonElement;
 		const newModuleSelect = element.querySelector("#new-module-select") as HTMLSelectElement;
+		const deleteLayoutBtn = element.querySelector("#delete-layout-btn") as HTMLButtonElement;
+		const deleteLayoutModal = element.querySelector("#delete-layout-modal") as HTMLDialogElement;
+		const cancelDeleteLayoutBtn = element.querySelector(
+			"#cancel-delete-layout-btn",
+		) as HTMLButtonElement;
+		const confirmDeleteLayoutBtn = element.querySelector(
+			"#confirm-delete-layout-btn",
+		) as HTMLButtonElement;
 
 		let moduleToDelete: HTMLElement | null = null;
 		let draggedModule: HTMLElement | null = null;
@@ -458,6 +466,43 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 				moduleToDelete = null;
 			}
 		});
+
+		// Delete layout functionality
+		deleteLayoutBtn.addEventListener("click", () => {
+			if (!data.layout) {
+				toast.error("Cannot delete a layout that hasn't been created yet");
+				return;
+			}
+			deleteLayoutModal.showModal();
+		});
+
+		cancelDeleteLayoutBtn.addEventListener("click", () => {
+			deleteLayoutModal.close();
+		});
+
+		confirmDeleteLayoutBtn.addEventListener("click", async () => {
+			const layoutId = (form.querySelector("input[name='layoutId']") as HTMLInputElement)?.value;
+
+			if (!layoutId) {
+				toast.error("No layout ID found");
+				deleteLayoutModal.close();
+				return;
+			}
+
+			await executeModuleAction({
+				element,
+				elementId: element.dataset.elementId!,
+				data: {
+					layoutId,
+					title: "",
+					description: "",
+					modules: [],
+					method: "DELETE",
+				},
+			});
+
+			deleteLayoutModal.close();
+		});
 		form.addEventListener("submit", async (e) => {
 			e.preventDefault();
 
@@ -522,6 +567,7 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 					title,
 					description,
 					modules,
+					method: layoutId ? "UPDATE" : "CREATE",
 				},
 			});
 		});
