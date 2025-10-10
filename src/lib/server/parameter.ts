@@ -89,7 +89,9 @@ export async function createConfigParameter(name: ParameterKeys, value: string) 
 export function getLayoutModuleParameters(layoutModule: RawLayoutModule) {
 	const moduleParameters = layoutModule.parameters
 		.map((parameter) => ({
-			[parameter.key.replace(`${layoutModule.module.shortName}.`, "")]: parameter.value,
+			[parameter.key.replace(`${layoutModule.module.shortName}.`, "")]: sanitizeParameterValue(
+				parameter.value,
+			),
 		}))
 		.reduce(
 			(acc, parameter) => {
@@ -145,4 +147,79 @@ export function getRefererRequestParameters({
 	}
 
 	return parameters;
+}
+
+/**
+ * Sanitizes parameter values to prevent XSS attacks
+ * Escapes HTML entities and removes potentially dangerous patterns
+ */
+export function sanitizeParameterValue(value: string) {
+	if (!value || typeof value !== "string") {
+		return "";
+	}
+
+	// First pass: Escape HTML entities
+	let sanitized = value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#x27;")
+		.replace(/\//g, "&#x2F;");
+
+	// Second pass: Remove null bytes and other dangerous characters
+	sanitized = sanitized.replace(/\0/g, "");
+
+	// Third pass: Remove javascript: and data: URI schemes (case-insensitive)
+	sanitized = sanitized.replace(/javascript:/gi, "");
+	sanitized = sanitized.replace(/data:text\/html/gi, "");
+	sanitized = sanitized.replace(/vbscript:/gi, "");
+
+	// Fourth pass: Remove on* event handlers (onclick, onload, etc.)
+	sanitized = sanitized.replace(/on\w+\s*=/gi, "");
+
+	return sanitized;
+}
+
+/**
+ * Sanitizes HTML content while allowing safe tags
+ * Use this for rich text content where some HTML is needed
+ */
+export function sanitizeHtmlContent(
+	html: string,
+	allowedTags: string[] = ["b", "i", "u", "p", "br", "strong", "em"],
+) {
+	if (!html || typeof html !== "string") {
+		return "";
+	}
+
+	// Remove script tags and their content
+	let sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+
+	// Remove style tags and their content
+	sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "");
+
+	// Remove iframe tags
+	sanitized = sanitized.replace(/<iframe[^>]*>.*?<\/iframe>/gi, "");
+
+	// Remove object and embed tags
+	sanitized = sanitized.replace(/<(object|embed)[^>]*>.*?<\/\1>/gi, "");
+
+	// Remove all event handlers
+	sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, "");
+	sanitized = sanitized.replace(/on\w+\s*=\s*[^\s>]*/gi, "");
+
+	// Remove javascript: and data: protocols from href and src attributes
+	sanitized = sanitized.replace(/(href|src)\s*=\s*["']?\s*javascript:/gi, "$1=");
+	sanitized = sanitized.replace(/(href|src)\s*=\s*["']?\s*data:text\/html/gi, "$1=");
+	sanitized = sanitized.replace(/(href|src)\s*=\s*["']?\s*vbscript:/gi, "$1=");
+
+	// If specific tags are allowed, strip all other tags
+	if (allowedTags.length > 0) {
+		const tagPattern = allowedTags.join("|");
+		const regex = new RegExp(`<(?!\\/?(${tagPattern})\\b)[^>]*>`, "gi");
+		sanitized = sanitized.replace(regex, "");
+	}
+
+	return sanitized;
 }
