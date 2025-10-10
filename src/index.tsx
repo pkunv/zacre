@@ -17,6 +17,13 @@ export const app = express();
 
 app.use(serverLog as unknown as RequestHandler);
 app.use(compression() as unknown as RequestHandler);
+app.use((req, res, next) => {
+	res.setHeader(
+		"Content-Security-Policy",
+		"default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';",
+	);
+	next();
+});
 app.all("/api/auth/*", toNodeHandler(auth));
 
 app.use(express.static(path.join(process.cwd(), "public")));

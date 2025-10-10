@@ -1,5 +1,6 @@
 import { executeModuleAction } from "@/client";
 import { toast } from "@/lib/client/toast";
+import { validateFormInputs } from "@/lib/client/validate-form";
 import { ClientModule } from "@/modules/client";
 import { LayoutFormData } from "@/modules/layout-form/server-layout-form";
 
@@ -466,6 +467,27 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 			const description = (form.querySelector("input[name='description']") as HTMLInputElement)
 				.value;
 
+			if (
+				!validateFormInputs({
+					form,
+					inputs: [
+						{
+							element: form.querySelector("input[name='title']") as HTMLInputElement,
+							isRequired: true,
+							minLength: 3,
+							maxLength: 32,
+						},
+						{
+							element: form.querySelector("input[name='description']") as HTMLInputElement,
+							isRequired: false,
+							maxLength: 128,
+						},
+					],
+				})
+			) {
+				return;
+			}
+
 			const moduleItems = Array.from(
 				modulesContainer.querySelectorAll(".module-item"),
 			) as HTMLElement[];
@@ -476,7 +498,7 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 				const y = parseInt(item.dataset.y || "0");
 
 				const parameterInputs = item.querySelectorAll(
-					`[data-layout-module-id="${layoutModuleId}"][data-parameter-key]`,
+					`input[data-layout-module-id="${layoutModuleId}"][data-parameter-key]`,
 				) as NodeListOf<HTMLInputElement>;
 				const parameters = Array.from(parameterInputs).map((input) => ({
 					key: input.dataset.parameterKey!,

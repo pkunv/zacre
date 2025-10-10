@@ -3,7 +3,6 @@ import { LayoutElementError } from "@/components/ui/error";
 import { reloadPages } from "@/index";
 import { db } from "@/lib/server/db";
 import { Layout, layoutIncludes } from "@/lib/server/layout";
-import { logMessage } from "@/lib/server/log";
 import { actionRedirect, ParameterDefinition, ServerModule } from "@/modules/server";
 import { z } from "zod";
 import { ParameterTypeEnum } from "~/generated/prisma/client";
@@ -56,36 +55,40 @@ export const serverLayoutForm: ServerModule<
 		return (
 			<form class="w-full h-full p-4">
 				<H1 className="text-left skeleton w-24 h-12"> </H1>
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Title</legend>
-					<input
-						type="text"
-						placeholder="Title..."
-						class="input input-xl skeleton mb-4"
-						name="title"
-					/>
-				</fieldset>
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Description</legend>
-					<input
-						type="text"
-						placeholder="Description..."
-						class="input input-md skeleton mb-4"
-						name="description"
-					/>
-					<p class="label">Optional</p>
-				</fieldset>
+				<div class="card bg-base-100 shadow-sm">
+					<div class="card-body">
+						<H2 className="card-title">Overview</H2>
+						{/* Title input */}
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">Title</legend>
+							<input
+								type="text"
+								placeholder="Layout Title..."
+								class="input input-xl skeleton "
+								name="title"
+								required
+							/>
+						</fieldset>
+
+						{/* Description input */}
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">Description</legend>
+							<input
+								type="text"
+								placeholder="Layout Description..."
+								class="input input-md skeleton "
+								name="description"
+							/>
+							<p class="label">Optional</p>
+						</fieldset>
+					</div>
+				</div>
 				<div class="flex flex-col gap-4 skeleton min-w-full min-h-96"></div>
 			</form>
 		);
 	},
 	render: async ({ element, req }) => {
 		const isEditMode = req.params.layoutId && req.params.layoutId !== "new";
-
-		logMessage({
-			functionName: "serverLayoutForm.render",
-			message: `Rendering layout form in ${isEditMode ? "edit" : "create"} mode, param layout: ${req.params.layoutId}`,
-		});
 
 		let layout: Layout | null = null;
 		if (isEditMode) {
@@ -124,32 +127,36 @@ export const serverLayoutForm: ServerModule<
 				<H1 className="text-left">{`${isEditMode ? "Edit" : "Create"} Layout`}</H1>
 				{/* Hidden field for layout ID */}
 				<input type="hidden" name="layoutId" value={layout?.id || ""} />
+				<div class="card bg-base-100 shadow-sm">
+					<div class="card-body">
+						<H2 className="card-title">Overview</H2>
+						{/* Title input */}
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">Title</legend>
+							<input
+								type="text"
+								placeholder="Layout Title..."
+								class="input input-xl"
+								name="title"
+								value={layout?.title || ""}
+								required
+							/>
+						</fieldset>
 
-				{/* Title input */}
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Title</legend>
-					<input
-						type="text"
-						placeholder="Layout Title..."
-						class="input input-xl"
-						name="title"
-						value={layout?.title || ""}
-						required
-					/>
-				</fieldset>
-
-				{/* Description input */}
-				<fieldset class="fieldset">
-					<legend class="fieldset-legend">Description</legend>
-					<input
-						type="text"
-						placeholder="Layout Description..."
-						class="input input-md"
-						name="description"
-						value={layout?.description || ""}
-					/>
-					<p class="label">Optional</p>
-				</fieldset>
+						{/* Description input */}
+						<fieldset class="fieldset">
+							<legend class="fieldset-legend">Description</legend>
+							<input
+								type="text"
+								placeholder="Layout Description..."
+								class="input input-md"
+								name="description"
+								value={layout?.description || ""}
+							/>
+							<p class="label">Optional</p>
+						</fieldset>
+					</div>
+				</div>
 
 				{/* Modules container */}
 				<div id="modules-container" class="flex flex-col gap-4 min-w-full">
@@ -404,6 +411,19 @@ export const serverLayoutForm: ServerModule<
 
 		// Create all layout modules with their parameters
 		for (const module of modules) {
+			// Remove duplicates by key and filter out undefined values
+			const uniqueParameters = module.parameters
+				.filter((param) => param.value !== undefined)
+				.reduce(
+					(acc, param) => {
+						acc[param.key] = param;
+						return acc;
+					},
+					{} as Record<string, { key: string; value: string }>,
+				);
+
+			const parameters = Object.values(uniqueParameters);
+
 			const layoutModule = await db.layoutModule.create({
 				data: {
 					layoutId: layout.id,
@@ -413,24 +433,10 @@ export const serverLayoutForm: ServerModule<
 				},
 			});
 
-			// Create parameters
-			if (module.parameters.length > 0 && !layoutId) {
+			// Create parameters if any exist
+			if (parameters.length > 0) {
 				await db.layoutModuleParameter.createMany({
-					data: module.parameters.map((param) => ({
-						layoutModuleId: layoutModule.id,
-						key: param.key,
-						value: param.value,
-					})),
-				});
-			}
-			if (module.parameters.length > 0 && layoutId) {
-				await db.layoutModuleParameter.deleteMany({
-					where: {
-						layoutModuleId: layoutModule.id,
-					},
-				});
-				await db.layoutModuleParameter.createMany({
-					data: module.parameters.map((param) => ({
+					data: parameters.map((param) => ({
 						layoutModuleId: layoutModule.id,
 						key: param.key,
 						value: param.value,

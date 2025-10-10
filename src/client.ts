@@ -2,7 +2,6 @@ import { initIcons } from "@/lib/client/icons";
 import { toast } from "@/lib/client/toast";
 import { ClientModule, clientModules } from "@/modules/client";
 import { createAuthClient } from "better-auth/client";
-
 export const authClient = createAuthClient({
 	baseURL: window.location.origin,
 });
@@ -114,9 +113,10 @@ export async function renderModules() {
 		if (module.dataset.isLoaderSwappable === "false") continue;
 		try {
 			const render = await fetchModuleRender(module.dataset.elementId);
-			if (render) {
-				module.outerHTML = render;
+			if (!render) {
+				throw new Error("Failed to fetch module render");
 			}
+			module.outerHTML = render;
 		} catch (error) {
 			toast.error(`Error rendering module ${module.dataset.module}: ${error}`);
 		}
