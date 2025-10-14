@@ -1,3 +1,5 @@
+import { Card, CardBody, CardTitle } from "@/components/modules-ui/card";
+import { Input } from "@/components/modules-ui/input";
 import { H1, H2 } from "@/components/modules-ui/typography";
 import { LayoutElementError } from "@/components/ui/error";
 import { reloadPages } from "@/index";
@@ -56,34 +58,20 @@ export const serverLayoutForm: ServerModule<
 		return (
 			<form class="w-full h-dvh overflow-auto p-4 flex flex-col gap-4">
 				<H1 className="text-left skeleton w-24 h-12"> </H1>
-				<div class="card bg-base-100 shadow-sm">
-					<div class="card-body">
-						<H2 className="card-title">Overview</H2>
-						{/* Title input */}
-						<fieldset class="fieldset">
-							<legend class="fieldset-legend">Title</legend>
-							<input
-								type="text"
-								placeholder="Layout Title..."
-								class="input input-xl skeleton "
-								name="title"
-								required
-							/>
-						</fieldset>
-
-						{/* Description input */}
-						<fieldset class="fieldset">
-							<legend class="fieldset-legend">Description</legend>
-							<input
-								type="text"
-								placeholder="Layout Description..."
-								class="input input-md skeleton "
-								name="description"
-							/>
-							<p class="label">Optional</p>
-						</fieldset>
-					</div>
-				</div>
+				<Card className="w-full max-w-3xl">
+					<CardBody>
+						<CardTitle>Overview</CardTitle>
+						<Input label="Title" name="title" value={""} required className="skeleton" />
+						<Input label="Description" name="description" value={""} className="skeleton" />
+						<Input
+							label="Active"
+							name="isActive"
+							type="checkbox"
+							checked={false}
+							className="skeleton"
+						/>
+					</CardBody>
+				</Card>
 				<div class="flex flex-col gap-4 skeleton min-w-full min-h-96"></div>
 			</form>
 		);
@@ -128,37 +116,20 @@ export const serverLayoutForm: ServerModule<
 				<H1 className="text-left">{`${isEditMode ? "Edit" : "Create"} Layout`}</H1>
 				{/* Hidden field for layout ID */}
 				<input type="hidden" name="layoutId" value={layout?.id || ""} />
-				<div class="card bg-base-100 shadow-sm">
-					<div class="card-body">
-						<H2 className="card-title">Overview</H2>
-						{/* Title input */}
-						<fieldset class="fieldset">
-							<legend class="fieldset-legend">Title</legend>
-							<input
-								type="text"
-								placeholder="Layout Title..."
-								class="input input-xl"
-								name="title"
-								value={layout?.title || ""}
-								required
-							/>
-						</fieldset>
-
-						{/* Description input */}
-						<fieldset class="fieldset">
-							<legend class="fieldset-legend">Description</legend>
-							<input
-								type="text"
-								placeholder="Layout Description..."
-								class="input input-md"
-								name="description"
-								value={layout?.description || ""}
-							/>
-							<p class="label">Optional</p>
-						</fieldset>
-					</div>
-				</div>
-
+				<Card className="w-full max-w-3xl">
+					<CardBody>
+						<CardTitle>Overview</CardTitle>
+						<Input label="Title" name="title" value={layout?.title || ""} required />
+						<Input label="Description" name="description" value={layout?.description || ""} />
+						<Input
+							label="Active"
+							name="isActive"
+							type="checkbox"
+							required
+							checked={layout?.isActive}
+						/>
+					</CardBody>
+				</Card>
 				{/* Modules container */}
 				<div id="modules-container" class="flex flex-col gap-4 min-w-full">
 					{layout?.modules.map((layoutModule, index) => (

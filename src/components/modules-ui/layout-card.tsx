@@ -11,7 +11,6 @@ export function LayoutCard({ layout }: { layout: Layout }) {
 						<div class="badge badge-ghost">{page.url}</div>
 					))}
 				</div>
-				<h2>{layout.title}</h2>
 				<P>{layout.description}</P>
 				<small>{layout.createdAt.toLocaleDateString()}</small>
 				<div class="card-actions justify-end">

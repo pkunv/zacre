@@ -15,8 +15,7 @@ export const layoutsRouter = {
 				isActive: z.boolean(),
 				modules: z.array(
 					z.object({
-						id: z.string().optional(),
-						shortName: z.string(),
+						id: z.string(),
 						x: z.number(),
 						y: z.number(),
 						parameters: z.array(

@@ -1,11 +1,11 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/server/db";
-import { createLayout } from "@/lib/server/layout";
+import { createLayout } from "@/lib/server/layouts/create";
 import { logMessage } from "@/lib/server/log";
-import { createPage } from "@/lib/server/pages/page";
+import { createPage } from "@/lib/server/pages/create";
 import { createConfigParameter, initializeParameters } from "@/lib/server/parameter";
 import { serverModules } from "@/modules/server";
-import { Feature, ParameterTypeEnum } from "~/generated/prisma/client";
+import { Feature, Module, ParameterTypeEnum } from "~/generated/prisma/client";
 
 async function main() {
 	logMessage({ functionName: "seed", message: "Starting seed...", appendToLogFile: true });
@@ -84,22 +84,32 @@ async function main() {
 		}
 	}
 
+	const modules = await db.module.findMany().then((modules) =>
+		modules.reduce(
+			(acc, module) => {
+				acc[module.shortName] = module;
+				return acc;
+			},
+			{} as Record<string, Module>,
+		),
+	);
+
 	const homeLayout = await createLayout({
 		title: "Home",
 		description: "Home",
 		isActive: true,
 		modules: [
 			{
-				shortName: "navbar",
+				id: modules.navbar.id,
 				x: 0,
 				y: 0,
-				params: [{ key: "titleImage", value: "/default-logo.webp" }],
+				parameters: [{ key: "titleImage", value: "/default-logo.webp" }],
 			},
 			{
-				shortName: "hero",
+				id: modules.hero.id,
 				x: 0,
 				y: 1,
-				params: [
+				parameters: [
 					{
 						key: "title",
 						value: "Lightweight and fast website builder. Small Wordpress alternative.",
@@ -113,10 +123,10 @@ async function main() {
 				],
 			},
 			{
-				shortName: "footer",
+				id: modules.footer.id,
 				x: 0,
 				y: 2,
-				params: [
+				parameters: [
 					{ key: "copyrightText", value: "Copyright 2025 Zacre. All rights reserved." },
 					{ key: "linkedinLink", value: "https://www.linkedin.com/in/piotr-kuncy-1a4618237/" },
 					{ key: "githubLink", value: "https://github.com/pkunv/zacre" },
@@ -131,7 +141,12 @@ async function main() {
 		description: "Sign In",
 		isActive: true,
 		modules: [
-			{ shortName: "sign-in", x: 0, y: 0, params: [{ key: "isSignUpEnabled", value: "false" }] },
+			{
+				id: modules.signIn.id,
+				x: 0,
+				y: 0,
+				parameters: [{ key: "isSignUpEnabled", value: "false" }],
+			},
 		],
 	});
 
@@ -140,8 +155,8 @@ async function main() {
 		description: "Admin",
 		isActive: true,
 		modules: [
-			{ shortName: "admin-sidebar", x: 0, y: 0, params: [] },
-			{ shortName: "admin-layouts", x: 1, y: 0, params: [] },
+			{ id: modules.adminSidebar.id, x: 0, y: 0, parameters: [] },
+			{ id: modules.adminLayouts.id, x: 1, y: 0, parameters: [] },
 		],
 	});
 
@@ -150,8 +165,8 @@ async function main() {
 		description: "Admin layout form",
 		isActive: true,
 		modules: [
-			{ shortName: "admin-sidebar", x: 0, y: 0, params: [] },
-			{ shortName: "layout-form", x: 1, y: 0, params: [] },
+			{ id: modules.adminSidebar.id, x: 0, y: 0, parameters: [] },
+			{ id: modules.layoutForm.id, x: 1, y: 0, parameters: [] },
 		],
 	});
 
@@ -160,8 +175,8 @@ async function main() {
 		description: "Admin pages",
 		isActive: true,
 		modules: [
-			{ shortName: "admin-sidebar", x: 0, y: 0, params: [] },
-			{ shortName: "admin-pages", x: 1, y: 0, params: [] },
+			{ id: modules.adminSidebar.id, x: 0, y: 0, parameters: [] },
+			{ id: modules.adminPages.id, x: 1, y: 0, parameters: [] },
 		],
 	});
 
@@ -170,8 +185,7 @@ async function main() {
 		description: "Home",
 		url: "/",
 		layoutId: homeLayout.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: true,
 	});
 
@@ -180,8 +194,7 @@ async function main() {
 		description: "Sign In",
 		url: "/sign-in",
 		layoutId: signInLayout.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: false,
 		assignedFeature: Feature.AUTH,
 	});
@@ -192,8 +205,7 @@ async function main() {
 		url: "/admin",
 		role: "admin",
 		layoutId: adminLayoutLayouts.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: true,
 		assignedFeature: Feature.ADMIN,
 	});
@@ -204,8 +216,7 @@ async function main() {
 		url: "/admin/layouts",
 		role: "admin",
 		layoutId: adminLayoutLayouts.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: true,
 		assignedFeature: Feature.ADMIN,
 	});
@@ -216,8 +227,7 @@ async function main() {
 		url: "/admin/layouts/:layoutId",
 		role: "admin",
 		layoutId: adminLayoutForm.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: true,
 		assignedFeature: Feature.ADMIN,
 	});
@@ -228,8 +238,7 @@ async function main() {
 		url: "/admin/layouts/new",
 		role: "admin",
 		layoutId: adminLayoutForm.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: true,
 		assignedFeature: Feature.ADMIN,
 	});
@@ -240,8 +249,7 @@ async function main() {
 		url: "/admin/pages",
 		role: "admin",
 		layoutId: adminPagesLayout.id,
-		createdById: systemUserId,
-		updatedById: systemUserId,
+		userId: systemUserId,
 		isLocked: true,
 		assignedFeature: Feature.ADMIN,
 	});

@@ -6,8 +6,7 @@ export type CreateLayoutParams = {
 	description?: string;
 	isActive: boolean;
 	modules: {
-		id?: string;
-		shortName: string;
+		id: string;
 		x: number;
 		y: number;
 		parameters: {
@@ -35,33 +34,30 @@ export async function createLayout(params: CreateLayoutParams) {
 		},
 	});
 
-	const modules = await db.module.findMany({
-		where: {
-			OR: [
-				{
-					shortName: {
-						in: params.modules
-							.filter((module) => module.shortName !== undefined)
-							.map((module) => module.shortName as string),
-					},
+	const modules = await db.module
+		.findMany({
+			where: {
+				id: {
+					in: params.modules
+						.filter((module) => module.id !== undefined)
+						.map((module) => module.id as string),
 				},
-				{
-					id: {
-						in: params.modules
-							.filter((module) => module.id !== undefined)
-							.map((module) => module.id as string),
-					},
-				},
-			],
-		},
-	});
+			},
+		})
+		.then((modules) => {
+			return modules.map((module) => {
+				return {
+					...module,
+					...params.modules.find((m) => m.id === module.id),
+				};
+			});
+		});
 
-	for (const module of params.modules) {
-		const moduleId = modules.find((m) => m.shortName === module.shortName)?.id;
-		if (!moduleId) {
+	for (const module of modules) {
+		if (!module.x || !module.y || !module.parameters) {
 			logMessage({
 				functionName: "createLayout",
-				message: `Warning: Module ${module.shortName} not found`,
+				message: `Warning: Module ${module.id} has no x or y position`,
 			});
 
 			continue;
@@ -69,7 +65,7 @@ export async function createLayout(params: CreateLayoutParams) {
 		const layoutModule = await db.layoutModule.create({
 			data: {
 				layoutId: layout.id,
-				moduleId,
+				moduleId: module.id,
 				x: module.x ?? 0,
 				y: module.y ?? 0,
 			},

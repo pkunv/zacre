@@ -1,4 +1,5 @@
-import { executeModuleAction } from "@/client";
+import { lockModuleButtons, unlockModuleButtons } from "@/client";
+import { initIcons } from "@/lib/client/icons";
 import { toast } from "@/lib/client/toast";
 import { validateFormInputs } from "@/lib/client/validate-form";
 import { ClientModule } from "@/modules/client";
@@ -161,8 +162,7 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 			reorganizeIntoRows();
 			attachModuleEventListeners();
 
-			const { createIcons, GripVertical, Trash, Plus, X } = require("lucide");
-			createIcons({ icons: { GripVertical, Trash, Plus, X } });
+			initIcons();
 
 			newModuleSelect.value = "";
 			toast.info("Module added");
@@ -266,8 +266,7 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 			select.value = "";
 			attachModuleEventListeners();
 
-			const { createIcons, X } = require("lucide");
-			createIcons({ icons: { X } });
+			initIcons();
 
 			toast.info("Parameter added");
 		};
@@ -489,17 +488,18 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 				return;
 			}
 
-			await executeModuleAction({
-				element,
-				elementId: element.dataset.elementId!,
-				data: {
-					layoutId,
-					title: "",
-					description: "",
-					modules: [],
-					method: "DELETE",
-				},
+			lockModuleButtons(element);
+			const res = await fetch(`/api/layout-modules/${element.dataset.elementId!}`, {
+				method: "DELETE",
 			});
+			if (!res.ok) {
+				toast.error("Failed to delete layout");
+				unlockModuleButtons(element);
+				return;
+			}
+
+			toast.success("Layout deleted successfully");
+			unlockModuleButtons(element);
 
 			deleteLayoutModal.close();
 		});
@@ -511,6 +511,7 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 			const title = (form.querySelector("input[name='title']") as HTMLInputElement).value;
 			const description = (form.querySelector("input[name='description']") as HTMLInputElement)
 				.value;
+			const isActive = (form.querySelector("input[name='isActive']") as HTMLInputElement).checked;
 
 			if (
 				!validateFormInputs({
@@ -551,25 +552,36 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 				}));
 
 				return {
-					layoutModuleId,
-					moduleId,
+					id: moduleId,
 					x,
 					y,
 					parameters,
 				};
 			});
 
-			await executeModuleAction({
-				element,
-				elementId: element.dataset.elementId!,
-				data: {
+			lockModuleButtons(element);
+
+			const res = await fetch(`/api/layouts${layoutId ? `/${layoutId}` : ""}`, {
+				method: layoutId ? "PUT" : "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
 					layoutId,
 					title,
 					description,
+					isActive,
 					modules,
-					method: layoutId ? "UPDATE" : "CREATE",
-				},
+				}),
 			});
+			if (!res.ok) {
+				toast.error("Failed to update layout");
+				unlockModuleButtons(element);
+				return;
+			}
+			toast.success(`Layout ${layoutId ? "updated" : "created"} successfully`);
+
+			unlockModuleButtons(element);
 		});
 
 		// Organize existing modules into rows on initial load

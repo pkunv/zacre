@@ -3,29 +3,36 @@ import { JSX } from "preact/jsx-runtime";
 export function Input({
 	label,
 	icon,
-	sizeOption,
-	className,
+	sizeOption = "md",
+	className = "",
 	required,
 	...inputProps
 }: {
 	label?: string;
 	icon?: string;
-	sizeOption: "xs" | "sm" | "md" | "lg" | "xl";
+	sizeOption?: "xs" | "sm" | "md" | "lg" | "xl";
 	className?: string;
 } & JSX.IntrinsicElements["input"]) {
+	const InputComponent = () => {
+		return (
+			<input
+				{...inputProps}
+				required={required}
+				type={inputProps.type || "text"}
+				class={`${inputProps.type === "checkbox" ? "checkbox" : "input"} input-${sizeOption || "md"} ${className}`}
+			/>
+		);
+	};
+
 	const InputWithLabelAndIcon = () => {
 		return (
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend">{label}</legend>
 				<label class="input">
 					<i data-lucide={icon} class="w-4 h-4 opacity-50" />
-					<input
-						{...inputProps}
-						required={required}
-						class={`input input-${sizeOption} ${className}`}
-					/>
+					<InputComponent />
 				</label>
-				<p class="label">{!required ? "Optional" : "Required"}</p>
+				{required && <p class="label">Required</p>}
 			</fieldset>
 		);
 	};
@@ -33,25 +40,20 @@ export function Input({
 		return (
 			<fieldset class="fieldset">
 				<legend class="fieldset-legend">{label}</legend>
-				<input
-					{...inputProps}
-					required={required}
-					class={`input input-${sizeOption} ${className}`}
-				/>
-				<p class="label">{!required ? "Optional" : "Required"}</p>
+				<InputComponent />
+				{required && <p class="label">Required</p>}
 			</fieldset>
 		);
 	};
 	const InputWithIcon = () => {
 		return (
-			<label class="input">
-				<i data-lucide={icon} class="w-4 h-4 opacity-50" />
-				<input
-					{...inputProps}
-					required={required}
-					class={`input input-${sizeOption} ${className}`}
-				/>
-			</label>
+			<fieldset class="fieldset">
+				<label class="input">
+					<i data-lucide={icon} class="w-4 h-4 opacity-50" />
+					<InputComponent />
+				</label>
+				{required && <p class="label">Required</p>}
+			</fieldset>
 		);
 	};
 
@@ -62,6 +64,6 @@ export function Input({
 	) : icon ? (
 		<InputWithIcon />
 	) : (
-		<input {...inputProps} required={required} class={`input input-${sizeOption} ${className}`} />
+		<InputComponent />
 	);
 }
