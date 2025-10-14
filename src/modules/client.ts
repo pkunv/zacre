@@ -2,6 +2,7 @@ import { clientAdminSidebar } from "@/modules/admin-sidebar/client-admin-sidebar
 import { clientFooter } from "@/modules/footer/client-footer";
 import { clientLayoutForm } from "@/modules/layout-form/client-layout-form";
 import { clientNavbar } from "@/modules/navbar/client-navbar";
+import { clientPagesForm } from "@/modules/pages-form/client-pages-form";
 import { clientSignIn } from "@/modules/sign-in/client-sign-in";
 
 export type ClientModule<T> = {
@@ -18,4 +19,5 @@ export const clientModules: ClientModule<any>[] = [
 	clientSignIn,
 	clientAdminSidebar,
 	clientLayoutForm,
+	clientPagesForm,
 ];

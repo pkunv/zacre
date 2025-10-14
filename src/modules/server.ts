@@ -1,4 +1,4 @@
-import { LayoutElement } from "@/lib/server/layout";
+import { LayoutModuleElement } from "@/lib/server/layouts/get";
 import { RouterRequest } from "@/lib/server/typed-router";
 import { serverAdminLayouts } from "@/modules/admin-layouts/server-admin-layouts";
 import { serverAdminPages } from "@/modules/admin-pages/server-admin-pages";
@@ -7,6 +7,7 @@ import { serverFooter } from "@/modules/footer/server-footer";
 import { serverHero } from "@/modules/hero/server-hero";
 import { serverLayoutForm } from "@/modules/layout-form/server-layout-form";
 import { serverNavbar } from "@/modules/navbar/server-navbar";
+import { serverPagesForm } from "@/modules/pages-form/server-pages-form";
 import { serverSignIn } from "@/modules/sign-in/server-sign-in";
 import { VNode } from "preact";
 import { ZodObject } from "zod/v3";
@@ -23,7 +24,7 @@ export type ParameterDefinition<T extends string> = {
 };
 
 // Helper type to extract parameter keys from parameter definitions
-type ExtractParameterKeys<T> = T extends readonly ParameterDefinition<infer K>[] ? K : never;
+export type ExtractParameterKeys<T> = T extends readonly ParameterDefinition<infer K>[] ? K : never;
 
 export type ServerModule<
 	TParams extends readonly ParameterDefinition<string>[],
@@ -39,17 +40,17 @@ export type ServerModule<
 		element,
 	}: {
 		req: RouterRequest;
-		element: LayoutElement<{ key: ExtractParameterKeys<TParams> }>;
+		element: LayoutModuleElement<{ key: ExtractParameterKeys<TParams> }>;
 	}) => VNode; // initial "Suspense" HTML
 	render?: ({
 		element,
 		req,
 	}: {
-		element: LayoutElement<{ key: ExtractParameterKeys<TParams> }>;
+		element: LayoutModuleElement<{ key: ExtractParameterKeys<TParams> }>;
 		req: RouterRequest;
 	}) => Promise<VNode>;
 	data?: (
-		element: LayoutElement<{ key: ExtractParameterKeys<TParams> }>,
+		element: LayoutModuleElement<{ key: ExtractParameterKeys<TParams> }>,
 		req: RouterRequest,
 	) => Promise<any>;
 	actionSchema?: ZodObject<any>;
@@ -58,7 +59,7 @@ export type ServerModule<
 		data,
 		request,
 	}: {
-		element: LayoutElement<{ key: ExtractParameterKeys<TParams> }>;
+		element: LayoutModuleElement<{ key: ExtractParameterKeys<TParams> }>;
 		data: TRequestData;
 		request: RouterRequest;
 	}) => Promise<any>;
@@ -73,6 +74,7 @@ export const serverModules = [
 	serverAdminLayouts,
 	serverAdminPages,
 	serverLayoutForm,
+	serverPagesForm,
 ];
 
 export const throwActionError = ({

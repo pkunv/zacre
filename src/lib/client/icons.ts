@@ -23,6 +23,7 @@ import {
 	Phone,
 	Plus,
 	Save,
+	Search,
 	ShieldAlert,
 	ShoppingBag,
 	Trash,
@@ -62,6 +63,7 @@ export function initIcons() {
 			GripVertical,
 			Save,
 			ExternalLink,
+			Search,
 		},
 	});
 }

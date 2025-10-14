@@ -9,7 +9,12 @@
 		"db:push": "prisma db push",
 		"db:seed": "esbuild ./prisma/seed.ts --bundle --minify --platform=node --format=esm --main-fields=module,main --outdir=dist --packages=external && prisma db seed",
 		"db:studio": "prisma studio",
-		"dev": "concurrently -r --handle-input --default-input-target 0  \"tsx watch src/index.tsx --clear-screen=false   \" \"npx tailwindcss -i ./src/style.css -o ./public/style.css --watch\"  \"esbuild ./src/client.ts --bundle --platform=browser --metafile=dist/client-bundle.meta.json --sourcemap --minify --watch --outbase=public --entry-names=main-[hash] --outdir=public\" "
+		"dev": "concurrently -r --handle-input --default-input-target 0  \"tsx watch src/index.tsx --clear-screen=false   \" \"npx tailwindcss -i ./src/style.css -o ./public/style.css --watch\"  \"esbuild ./src/client.ts --bundle --platform=browser --metafile=dist/client-bundle.meta.json --sourcemap --minify --tree-shaking=true --watch --outbase=public --entry-names=main-[hash] --outdir=public\" ",
+		"build:server": "esbuild ./src/index.tsx --bundle --platform=node --format=esm --sourcemap --minify --packages=external --outfile=dist/index.js",
+		"build:client": "esbuild ./src/client.ts --bundle --platform=browser --metafile=dist/client-bundle.meta.json --minify --tree-shaking=true --outbase=public --entry-names=main-[hash] --outdir=public",
+		"build:tailwind": "npx tailwindcss -i ./src/style.css -o ./public/style.css --minify",
+		"build": "npm run build:server && npm run build:client && npm run build:tailwind",
+		"start": "node ./dist/index.js"
 	},
 	"prisma": {
 		"seed": "node dist/seed.js"

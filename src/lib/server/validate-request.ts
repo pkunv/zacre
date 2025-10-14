@@ -18,7 +18,7 @@ export const validateRequest =
 			}
 
 			// Set the parsed data on the request object
-			(req as any).parsed = data;
+			(req as any).data = data;
 			next();
 		} catch (error) {
 			console.error("Validation error:", error);

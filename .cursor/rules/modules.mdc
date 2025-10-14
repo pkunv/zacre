@@ -29,7 +29,8 @@ into `src/server.ts -> serverModules[]` array variable. Back-end file is the mai
 - Render async function that is final JSX sent to the user, where you can fetch some data and map through it to show data from database for example
 - Data function that can be used to transfer data to the client, optional
 - Action function that can be fired on a form inside the module, used with client side function `executeModuleAction()`, helpful with forms
-  and interactions with a module. Action can also result in a redirect to a different page using `actionRedirect()` function.
+  and interactions with a module. Action can also result in a redirect to a different page using `actionRedirect()` function. Remember that action function should be created and implemented only to allow for small, ad-hoc interactions with
+  the engine. Most APIs should be done with REST API TypedRouter inside `src/api/` directory, using `createRoute()` function.
 
 On the other hand we have client-side code that is optional, but required in situations where we need some sort of interaction. It's specified by `client-` prefix inside module folder.
 Client module is part that is handled on the client-side, with its root in `src/modules/client.ts` where client modules need to be appended into `clientModules` array. In this file we can find types for ClientModule:

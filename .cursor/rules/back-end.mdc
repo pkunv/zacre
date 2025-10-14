@@ -23,16 +23,31 @@ export const exampleRouter = {
     handler: async (req, res) => {
       const id = req.parsed.id;
 
-      const data = doSomething(id);
+      const {data, error} = await tryCatch(doSomething(id));
 
-      if(!data) {
-        res.status(404).json({status: "error", message: "Not found"});
-        return;
-      }
+      if (error) {
+				res
+					.status(
+						(typeof error.cause === "object" && error.cause && "statusCode" in error.cause
+							? (error.cause as { statusCode?: number }).statusCode
+							: undefined) || 500,
+					)
+					.json({ status: "error", message: error.message });
+				return;
+			}
 
-      res.json(data);
+      // IMPORTANT: If our data response is an array, name the key "items", instead of "item".
+      res.json({status: "success", item: data});
       return;
     }
   })
 }
 ```
+
+- If endpoint data is paginated, response with "data" variable anyway, as it provides important pagination data.
+
+- Always use tryCatch() function for elegant catching errors.
+
+- Response JSON object should always have key "status" that is either "success" or "error", depending on the result of handlers function.
+
+- Based on handlers function and its response, final JSON object should have data be placed in "item" or "items" key, depending on data type (array or object).

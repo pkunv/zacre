@@ -69,7 +69,7 @@ export async function executeModuleAction({
 	if (lockButtons) {
 		unlockModuleButtons(element);
 	}
-	if (!response.ok) {
+	if (!response.ok && response.status !== 302) {
 		const result = await response.json();
 		toast.error(result.message);
 		return result;
@@ -86,7 +86,7 @@ export async function executeModuleAction({
 }
 
 export async function fetchModuleData(elementId: string) {
-	const response = await fetch(`api/layout-modules?elementIds=${elementId}`);
+	const response = await fetch(`/api/layout-modules?elementIds=${elementId}`);
 	return await response.json();
 }
 

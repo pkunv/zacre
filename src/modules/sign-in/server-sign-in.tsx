@@ -1,5 +1,5 @@
 import { configParameterCache } from "@/lib/server/parameter";
-import { actionRedirect, ParameterDefinition, ServerModule } from "@/modules/server";
+import { ParameterDefinition, ServerModule } from "@/modules/server";
 
 export const signInParameters = [
 	{ key: "isSignUpEnabled" },
@@ -50,27 +50,5 @@ export const serverSignIn: ServerModule<typeof signInParameters, unknown> = {
 				</form>
 			</div>
 		);
-	},
-	action: async ({ request }) => {
-		const session = request.auth;
-
-		if (!session) {
-			throw {
-				statusCode: 401,
-				message: "Unauthorized",
-			};
-		}
-
-		if (session.user.role === "admin") {
-			return actionRedirect({
-				url: "/admin",
-				message: "Signed in successfully. You will be redirected to the admin panel.",
-			});
-		}
-
-		return actionRedirect({
-			url: "/",
-			message: "Signed in successfully. You will be redirected to the home page.",
-		});
 	},
 };

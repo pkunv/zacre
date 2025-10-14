@@ -5,14 +5,18 @@ import express, { NextFunction, Request, RequestHandler, Response } from "ultima
 import { AnyZodObject } from "zod/v3";
 
 export type RouterRequest = Request & {
-	data: unknown;
+	data: {
+		params: Record<string, string>;
+		query: Record<string, string>;
+		body: unknown;
+	};
 	auth: Session | null;
 	role?: string | string[];
 };
 
 // Type for a validated request handler
 export type ValidatedHandler<T extends AnyZodObject> = (
-	req: Request & { parsed: T["_output"]; auth: Session | null },
+	req: Request & { data: T["_output"]; auth: Session | null },
 	res: Response,
 	next: NextFunction,
 ) => Promise<void> | void;

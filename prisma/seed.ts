@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/server/db";
 import { createLayout } from "@/lib/server/layout";
 import { logMessage } from "@/lib/server/log";
-import { createPage } from "@/lib/server/page";
+import { createPage } from "@/lib/server/pages/page";
 import { createConfigParameter, initializeParameters } from "@/lib/server/parameter";
 import { serverModules } from "@/modules/server";
 import { Feature, ParameterTypeEnum } from "~/generated/prisma/client";

@@ -1,4 +1,5 @@
-import { authClient, executeModuleAction, lockModuleButtons, unlockModuleButtons } from "@/client";
+import { authClient, lockModuleButtons, unlockModuleButtons } from "@/client";
+import { toast } from "@/lib/client/toast";
 import { ClientModule } from "@/modules/client";
 
 export const clientSignIn: ClientModule<unknown> = {
@@ -11,15 +12,18 @@ export const clientSignIn: ClientModule<unknown> = {
 				e.preventDefault();
 				const formData = new FormData(form);
 				lockModuleButtons(element);
-				await authClient.signIn.email({
+				const response = await authClient.signIn.email({
 					email: formData.get("email") as string,
 					password: formData.get("password") as string,
 				});
-				await executeModuleAction({
-					element,
-					elementId: element.dataset.elementId!,
-					lockButtons: false,
-				});
+				if (response.error) {
+					toast.error(response.error.message || "An error occurred");
+				} else {
+					toast.success("Signed in successfully. You will be redirected to the home page.");
+					setTimeout(() => {
+						window.location.href = "/admin";
+					}, 650);
+				}
 				unlockModuleButtons(element);
 			};
 		}

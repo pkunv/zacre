@@ -1,12 +1,12 @@
 import { H1, H2, P } from "@/components/modules-ui/typography";
 import { db } from "@/lib/server/db";
-import { pageIncludes, RawPage } from "@/lib/server/page";
+import { Page, pageIncludes } from "@/lib/server/pages/get";
 import { ParameterDefinition, ServerModule } from "@/modules/server";
 
 export const adminPagesParameters = [] as const satisfies readonly ParameterDefinition<string>[];
 
 export type AdminPagesData = {
-	pages: RawPage[];
+	pages: Page[];
 };
 
 export const serverAdminPages: ServerModule<typeof adminPagesParameters, unknown> = {

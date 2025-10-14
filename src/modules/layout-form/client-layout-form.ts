@@ -476,11 +476,11 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 			deleteLayoutModal.showModal();
 		});
 
-		cancelDeleteLayoutBtn.addEventListener("click", () => {
+		cancelDeleteLayoutBtn?.addEventListener("click", () => {
 			deleteLayoutModal.close();
 		});
 
-		confirmDeleteLayoutBtn.addEventListener("click", async () => {
+		confirmDeleteLayoutBtn?.addEventListener("click", async () => {
 			const layoutId = (form.querySelector("input[name='layoutId']") as HTMLInputElement)?.value;
 
 			if (!layoutId) {

@@ -2,7 +2,7 @@ import { H1, H2 } from "@/components/modules-ui/typography";
 import { LayoutElementError } from "@/components/ui/error";
 import { reloadPages } from "@/index";
 import { db } from "@/lib/server/db";
-import { Layout, layoutIncludes } from "@/lib/server/layout";
+import { Layout, layoutIncludes } from "@/lib/server/layouts/get";
 import { actionRedirect, ParameterDefinition, ServerModule } from "@/modules/server";
 import { z } from "zod";
 import { ParameterTypeEnum } from "~/generated/prisma/client";
@@ -89,14 +89,14 @@ export const serverLayoutForm: ServerModule<
 		);
 	},
 	render: async ({ element, req }) => {
-		const isEditMode = req.params.layoutId && req.params.layoutId !== "new";
+		const isEditMode = req.data.params.layoutId && req.data.params.layoutId !== "new";
 
 		let layout: Layout | null = null;
 		if (isEditMode) {
 			layout = await db.layout.findFirst({
 				include: layoutIncludes,
 				where: {
-					id: req.params.layoutId,
+					id: req.data.params.layoutId,
 				},
 			});
 
@@ -368,14 +368,15 @@ export const serverLayoutForm: ServerModule<
 		);
 	},
 	data: async (element, req) => {
-		const isEditMode = req.params.layoutId && req.params.layoutId !== "new";
+		const isEditMode =
+			req.data.params && req.data.params.layoutId && req.data.params.layoutId !== "new";
 
 		let layout: Layout | null = null;
 		if (isEditMode) {
 			layout = await db.layout.findFirst({
 				include: layoutIncludes,
 				where: {
-					id: req.params.layoutId,
+					id: req.data.params.layoutId,
 				},
 			});
 		}
