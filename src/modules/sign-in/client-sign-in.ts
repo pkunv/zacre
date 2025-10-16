@@ -1,5 +1,6 @@
-import { authClient, lockModuleButtons, unlockModuleButtons } from "@/client";
+import { authClient } from "@/client";
 import { toast } from "@/lib/client/toast";
+import { lockModuleButtons, unlockModuleButtons } from "@/lib/client/utils";
 import { ClientModule } from "@/modules/client";
 
 export const clientSignIn: ClientModule<unknown> = {

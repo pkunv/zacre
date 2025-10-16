@@ -2,10 +2,9 @@ import { Card, CardBody, CardTitle } from "@/components/modules-ui/card";
 import { Input } from "@/components/modules-ui/input";
 import { H1, H2 } from "@/components/modules-ui/typography";
 import { LayoutElementError } from "@/components/ui/error";
-import { reloadPages } from "@/index";
 import { db } from "@/lib/server/db";
 import { Layout, layoutIncludes } from "@/lib/server/layouts/get";
-import { actionRedirect, ParameterDefinition, ServerModule } from "@/modules/server";
+import { ParameterDefinition, ServerModule } from "@/modules/server";
 import { z } from "zod";
 import { ParameterTypeEnum } from "~/generated/prisma/client";
 
@@ -373,104 +372,5 @@ export const serverLayoutForm: ServerModule<
 			allParameterTypes,
 			allModules,
 		} satisfies LayoutFormData;
-	},
-	actionSchema: layoutFormActionSchema as any,
-	action: async ({ element, data, request }) => {
-		const { layoutId, title, description, modules, method } = data;
-
-		if (method === "DELETE") {
-			if (!layoutId) {
-				throw new Error("Layout ID is required to delete a layout");
-			}
-			const layout = await db.layout.findUnique({
-				where: { id: layoutId },
-				include: layoutIncludes,
-			});
-			if (!layout) {
-				throw new Error("Layout not found");
-			}
-			if (layout.pages && layout.pages.length > 0) {
-				throw new Error("Layout has pages, cannot delete");
-			}
-			await db.layout.delete({ where: { id: layoutId } });
-			await reloadPages();
-			return actionRedirect({ url: `/admin/layouts`, message: "Layout deleted successfully" });
-		}
-
-		// If layoutId exists, update the layout, otherwise create a new one
-		if (layoutId) {
-			// Update existing layout
-			await db.layout.update({
-				where: { id: layoutId },
-				data: {
-					title,
-					description,
-					updatedAt: new Date(),
-				},
-			});
-
-			// Delete all existing layout modules and their parameters
-			await db.layoutModule.deleteMany({
-				where: { layoutId },
-			});
-		}
-
-		// Create or get the layout
-		const layout = layoutId
-			? await db.layout.findUnique({ where: { id: layoutId } })
-			: await db.layout.create({
-					data: {
-						title,
-						description,
-						isActive: true,
-					},
-				});
-
-		if (!layout) {
-			throw new Error("Failed to create or find layout");
-		}
-
-		// Create all layout modules with their parameters
-		for (const module of modules) {
-			// Remove duplicates by key and filter out undefined values
-			const uniqueParameters = module.parameters
-				.filter((param) => param.value !== undefined)
-				.reduce(
-					(acc, param) => {
-						acc[param.key] = param;
-						return acc;
-					},
-					{} as Record<string, { key: string; value: string }>,
-				);
-
-			const parameters = Object.values(uniqueParameters);
-
-			const layoutModule = await db.layoutModule.create({
-				data: {
-					layoutId: layout.id,
-					moduleId: module.moduleId,
-					x: module.x,
-					y: module.y,
-				},
-			});
-
-			// Create parameters if any exist
-			if (parameters.length > 0) {
-				await db.layoutModuleParameter.createMany({
-					data: parameters.map((param) => ({
-						layoutModuleId: layoutModule.id,
-						key: param.key,
-						value: param.value,
-					})),
-				});
-			}
-		}
-
-		await reloadPages();
-
-		return actionRedirect({
-			url: `/admin/layouts`,
-			message: layoutId ? "Layout updated successfully" : "Layout created successfully",
-		});
 	},
 };

@@ -1,4 +1,5 @@
 import { env } from "@/lib/server/env";
+import { Page } from "@/lib/server/pages/get";
 import { RouterRequest } from "@/lib/server/typed-router";
 import crypto, { BinaryToTextEncoding } from "crypto";
 import { readdirSync } from "fs";
@@ -113,4 +114,86 @@ export function getRefererRequestSearchQueryParams({
 	const searchParams = refererUrl.searchParams;
 
 	return Object.fromEntries(searchParams);
+}
+
+export function formatDate(date: Date) {
+	// TODO: website parameter "language" for date formatting
+	return date.toLocaleDateString("pl-PL");
+}
+
+export function capitalize(str: string) {
+	return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+export function findPageByUrl(pages: Page[], fullUrl: string) {
+	// Extract pathname from full URL
+	let pathname: string;
+	try {
+		const urlObj = new URL(fullUrl);
+		pathname = urlObj.pathname;
+	} catch {
+		// If it's not a full URL, assume it's already a pathname
+		pathname = fullUrl;
+	}
+
+	// Normalize pathname (remove trailing slash if present, except for root)
+	if (pathname !== "/" && pathname.endsWith("/")) {
+		pathname = pathname.slice(0, -1);
+	}
+
+	// Split pathname into segments
+	const pathnameSegments = pathname.split("/").filter((segment) => segment !== "");
+
+	// First pass: look for exact matches (static routes)
+	const exactMatch = pages.find((page: any) => {
+		let pageUrl = page.url;
+		if (pageUrl !== "/" && pageUrl.endsWith("/")) {
+			pageUrl = pageUrl.slice(0, -1);
+		}
+		return pageUrl === pathname;
+	});
+
+	if (exactMatch) {
+		return exactMatch;
+	}
+
+	// Second pass: look for parametrized matches
+	for (const page of pages) {
+		let pageUrl = page.url;
+		if (pageUrl !== "/" && pageUrl.endsWith("/")) {
+			pageUrl = pageUrl.slice(0, -1);
+		}
+
+		const pageSegments = pageUrl.split("/").filter((segment: string) => segment !== "");
+
+		// Check if the paths have the same number of segments
+		if (pathnameSegments.length !== pageSegments.length) {
+			continue;
+		}
+
+		// Check if all segments match (treating :param as a wildcard)
+		let isMatch = true;
+		for (let i = 0; i < pageSegments.length; i++) {
+			const pageSegment = pageSegments[i];
+			const pathnameSegment = pathnameSegments[i];
+
+			// If the page segment starts with ':', it's a parameter (matches anything)
+			if (pageSegment.startsWith(":")) {
+				continue;
+			}
+
+			// Otherwise, segments must match exactly
+			if (pageSegment !== pathnameSegment) {
+				isMatch = false;
+				break;
+			}
+		}
+
+		if (isMatch) {
+			return page;
+		}
+	}
+
+	// No match found
+	return null;
 }

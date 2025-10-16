@@ -11,6 +11,8 @@ import { renderToString } from "preact-render-to-string";
 import { Feature, Prisma } from "~/generated/prisma/client";
 
 export const pageIncludes = {
+	createdBy: true,
+	updatedBy: true,
 	layout: {
 		include: {
 			modules: {

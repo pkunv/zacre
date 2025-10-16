@@ -3,7 +3,11 @@ import { db } from "@/lib/server/db";
 import { insertLayoutModuleMetadata, layoutModuleIncludes } from "@/lib/server/layouts/get";
 import { getLayoutModuleParameters } from "@/lib/server/parameter";
 import { RouterRequest } from "@/lib/server/typed-router";
-import { getRefererRequestParams, getRefererRequestSearchQueryParams } from "@/lib/server/utils";
+import {
+	findPageByUrl,
+	getRefererRequestParams,
+	getRefererRequestSearchQueryParams,
+} from "@/lib/server/utils";
 import { serverModules } from "@/modules/server";
 import renderToString from "preact-render-to-string";
 
@@ -33,7 +37,7 @@ export async function renderLayoutModule({
 		throw new Error("Server module render not found", { cause: { statusCode: 404 } });
 	}
 
-	const page = pages.find((p) => p.layout.id === layoutModule.layoutId);
+	const page = findPageByUrl(pages, req.headers.referer || "");
 
 	if (!page) {
 		throw new Error("Page not found", { cause: { statusCode: 404 } });

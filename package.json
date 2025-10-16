@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"db:reset": "prisma migrate reset --force",
+		"db:reset": "prisma migrate reset --force --skip-seed",
 		"db:push": "prisma db push",
 		"db:seed": "esbuild ./prisma/seed.ts --bundle --minify --platform=node --format=esm --main-fields=module,main --outdir=dist --packages=external && prisma db seed",
 		"db:studio": "prisma studio",

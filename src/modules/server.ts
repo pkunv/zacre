@@ -7,7 +7,7 @@ import { serverFooter } from "@/modules/footer/server-footer";
 import { serverHero } from "@/modules/hero/server-hero";
 import { serverLayoutForm } from "@/modules/layout-form/server-layout-form";
 import { serverNavbar } from "@/modules/navbar/server-navbar";
-import { serverPagesForm } from "@/modules/pages-form/server-pages-form";
+import { serverPageForm } from "@/modules/page-form/server-page-form";
 import { serverSignIn } from "@/modules/sign-in/server-sign-in";
 import { VNode } from "preact";
 import { ZodObject } from "zod/v3";
@@ -74,7 +74,7 @@ export const serverModules = [
 	serverAdminLayouts,
 	serverAdminPages,
 	serverLayoutForm,
-	serverPagesForm,
+	serverPageForm,
 ];
 
 export const throwActionError = ({

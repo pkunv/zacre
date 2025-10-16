@@ -7,12 +7,14 @@ export function Button({
 	iconName,
 	children,
 	className,
+	typeOption = "primary",
 	...props
 }: {
-	sizeOption: "xs" | "sm" | "md" | "lg";
+	sizeOption?: "xs" | "sm" | "md" | "lg";
 	asLink?: boolean;
 	href?: string;
 	iconName?: string;
+	typeOption?: "primary" | "secondary" | "accent" | "ghost" | "link" | "error";
 	children?: JSX.Element | JSX.Element[] | string;
 	className?: string;
 } & (JSX.IntrinsicElements["button"] | JSX.IntrinsicElements["a"])) {
@@ -23,7 +25,7 @@ export function Button({
 		</>
 	);
 
-	const classes = `btn btn-${sizeOption} ${className || ""}`;
+	const classes = `btn ${sizeOption && `btn-${sizeOption}`} ${typeOption && `btn-${typeOption}`} ${className || ""}`;
 
 	if (asLink && href) {
 		return (

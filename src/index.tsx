@@ -63,8 +63,8 @@ async function mountPages() {
 				const pageData = await assemblePage({ url: url, req });
 				const html = await renderPageToHTML(pageData, req as RouterRequest);
 				logMessage({
-					functionName: "renderPage",
-					message: `Rendering page ${url} in ${performance.now() - perf}ms`,
+					functionName: "assemblePage",
+					message: `Assembled page ${url} in ${performance.now() - perf}ms`,
 				});
 				res.setHeader("Content-Type", "text/html");
 				res.send(html);

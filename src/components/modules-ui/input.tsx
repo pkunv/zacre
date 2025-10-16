@@ -6,12 +6,14 @@ export function Input({
 	sizeOption = "md",
 	className = "",
 	required,
+	helperText,
 	...inputProps
 }: {
 	label?: string;
 	icon?: string;
 	sizeOption?: "xs" | "sm" | "md" | "lg" | "xl";
 	className?: string;
+	helperText?: string;
 } & JSX.IntrinsicElements["input"]) {
 	const InputComponent = () => {
 		return (
@@ -19,7 +21,7 @@ export function Input({
 				{...inputProps}
 				required={required}
 				type={inputProps.type || "text"}
-				class={`${inputProps.type === "checkbox" ? "checkbox" : "input"} input-${sizeOption || "md"} ${className}`}
+				class={`${inputProps.type === "checkbox" ? "checkbox" : "input"} input-${inputProps.type !== "checkbox" ? sizeOption || "md" : ""} ${className}`}
 			/>
 		);
 	};
@@ -33,6 +35,7 @@ export function Input({
 					<InputComponent />
 				</label>
 				{required && <p class="label">Required</p>}
+				{helperText && <p class="label">{helperText}</p>}
 			</fieldset>
 		);
 	};
@@ -42,6 +45,7 @@ export function Input({
 				<legend class="fieldset-legend">{label}</legend>
 				<InputComponent />
 				{required && <p class="label">Required</p>}
+				{helperText && <p class="label">{helperText}</p>}
 			</fieldset>
 		);
 	};
@@ -53,6 +57,7 @@ export function Input({
 					<InputComponent />
 				</label>
 				{required && <p class="label">Required</p>}
+				{helperText && <p class="label">{helperText}</p>}
 			</fieldset>
 		);
 	};
@@ -65,5 +70,34 @@ export function Input({
 		<InputWithIcon />
 	) : (
 		<InputComponent />
+	);
+}
+
+export function Select({
+	children,
+	label,
+	icon,
+	sizeOption = "md",
+	className = "",
+	required,
+	helperText,
+	...selectProps
+}: {
+	children?: JSX.Element | JSX.Element[] | string;
+	label?: string;
+	icon?: string;
+	sizeOption?: "xs" | "sm" | "md" | "lg" | "xl";
+	className?: string;
+	helperText?: string;
+} & JSX.IntrinsicElements["select"]) {
+	return (
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">{label}</legend>
+			<select {...selectProps} class={`${className} select select-${sizeOption}`}>
+				{children}
+			</select>
+			{required && <p class="label">Required</p>}
+			{helperText && <p class="label">{helperText}</p>}
+		</fieldset>
 	);
 }

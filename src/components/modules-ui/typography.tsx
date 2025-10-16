@@ -89,9 +89,25 @@ export function Muted({
 	props?: JSX.HTMLAttributes<HTMLParagraphElement>;
 }) {
 	return (
-		<p {...props} class={`text-muted-foreground ${className}`}>
+		<p {...props} class={`text-base-content/60 ${className}`}>
 			{children}
 		</p>
+	);
+}
+
+export function SmallMuted({
+	children,
+	className,
+	...props
+}: {
+	children: JSX.Element | string | (JSX.Element | string)[];
+	className?: string;
+	props?: JSX.HTMLAttributes<HTMLParagraphElement>;
+}) {
+	return (
+		<small {...props} class={`text-base-content/60 ${className}`}>
+			{children}
+		</small>
 	);
 }
 

@@ -1,11 +1,11 @@
-import { executeModuleAction } from "@/client";
+import { submitForm } from "@/lib/client/form";
 import { toast } from "@/lib/client/toast";
-import { validateFormInputs } from "@/lib/client/validate-form";
 import { ClientModule } from "@/modules/client";
-import { PagesFormData } from "@/modules/pages-form/server-pages-form";
+import { PageFormData } from "@/modules/page-form/server-page-form";
+import z from "zod/v3";
 
-export const clientPagesForm: ClientModule<PagesFormData> = {
-	shortName: "pages-form",
+export const clientPageForm: ClientModule<PageFormData> = {
+	shortName: "page-form",
 	clientInit: async ({ data, element }) => {
 		const form = element as HTMLFormElement;
 		const selectLayoutBtn = element.querySelector("#select-layout-btn") as HTMLButtonElement;
@@ -27,12 +27,6 @@ export const clientPagesForm: ClientModule<PagesFormData> = {
 		const confirmDeletePageBtn = element.querySelector(
 			"#confirm-delete-page-btn",
 		) as HTMLButtonElement;
-
-		// Remove skeleton classes
-		const skeletonElements = element.querySelectorAll(".skeleton");
-		skeletonElements.forEach((el) => {
-			el.classList.remove("skeleton");
-		});
 
 		// Open layout selection modal
 		selectLayoutBtn.addEventListener("click", () => {
@@ -65,6 +59,7 @@ export const clientPagesForm: ClientModule<PagesFormData> = {
 		const selectLayoutButtons = element.querySelectorAll(".select-layout-btn");
 		selectLayoutButtons.forEach((btn) => {
 			btn.addEventListener("click", (e) => {
+				console.log("click");
 				const button = e.currentTarget as HTMLButtonElement;
 				const layoutId = button.dataset.layoutId;
 				const layoutTitle = button.dataset.layoutTitle;
@@ -81,18 +76,19 @@ export const clientPagesForm: ClientModule<PagesFormData> = {
 
 		// Delete page functionality
 		deletePageBtn.addEventListener("click", () => {
-			if (!data.page) {
+			const pageId = (form.querySelector("input[name='pageId']") as HTMLInputElement)?.value;
+			if (!pageId) {
 				toast.error("Cannot delete a page that hasn't been created yet");
 				return;
 			}
 			deletePageModal.showModal();
 		});
 
-		cancelDeletePageBtn.addEventListener("click", () => {
+		cancelDeletePageBtn?.addEventListener("click", () => {
 			deletePageModal.close();
 		});
 
-		confirmDeletePageBtn.addEventListener("click", async () => {
+		confirmDeletePageBtn?.addEventListener("click", async () => {
 			const pageId = (form.querySelector("input[name='pageId']") as HTMLInputElement)?.value;
 
 			if (!pageId) {
@@ -101,18 +97,11 @@ export const clientPagesForm: ClientModule<PagesFormData> = {
 				return;
 			}
 
-			await executeModuleAction({
+			await submitForm({
 				element,
-				elementId: element.dataset.elementId!,
-				data: {
-					pageId,
-					title: "",
-					description: "",
-					url: "",
-					layoutId: "",
-					isActive: false,
-					method: "DELETE",
-				},
+				url: `/api/pages/${pageId}`,
+				method: "DELETE",
+				redirectUrl: "/admin/pages",
 			});
 
 			deletePageModal.close();
@@ -134,60 +123,33 @@ export const clientPagesForm: ClientModule<PagesFormData> = {
 				form.querySelector("select[name='assignedFeature']") as HTMLSelectElement
 			).value;
 
-			// Validate form inputs
-			if (
-				!validateFormInputs({
-					form,
-					inputs: [
-						{
-							element: form.querySelector("input[name='title']") as HTMLInputElement,
-							isRequired: true,
-							minLength: 3,
-							maxLength: 128,
-						},
-						{
-							element: form.querySelector("input[name='description']") as HTMLInputElement,
-							isRequired: false,
-							maxLength: 256,
-						},
-						{
-							element: form.querySelector("input[name='url']") as HTMLInputElement,
-							isRequired: true,
-							minLength: 1,
-							maxLength: 256,
-						},
-					],
-				})
-			) {
-				return;
-			}
-
-			// Validate URL starts with /
-			if (!url.startsWith("/")) {
-				toast.error("URL must start with /");
-				return;
-			}
-
-			// Validate layout is selected
-			if (!layoutId) {
-				toast.error("Please select a layout");
-				return;
-			}
-
-			await executeModuleAction({
+			await submitForm({
 				element,
-				elementId: element.dataset.elementId!,
+				url: `/api/pages${pageId ? `/${pageId}` : ""}`,
+				method: pageId ? "PUT" : "POST",
 				data: {
-					pageId,
 					title,
 					description,
 					url,
 					layoutId,
 					isActive,
-					assignedFeature: assignedFeature || undefined,
-					method: pageId ? "UPDATE" : "CREATE",
+					assignedFeature: assignedFeature === "" ? undefined : assignedFeature || undefined,
 				},
+				schema: z.object({
+					title: z.string().min(3).max(128),
+					description: z.string().max(256).optional(),
+					url: z
+						.string()
+						.min(1)
+						.max(256)
+						.regex(/^[/].*/, { message: "URL must start with a slash" }),
+					layoutId: z.string({ message: "Layout is required" }),
+					isActive: z.boolean(),
+					assignedFeature: z.string().optional(),
+				}),
 			});
+
+			return;
 		});
 	},
 };

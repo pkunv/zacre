@@ -81,7 +81,6 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 						<Input
 							label="Search"
 							icon="search"
-							sizeOption="md"
 							className="w-full"
 							id="search-input"
 							name="q"

@@ -25,11 +25,14 @@ export async function updatePage(params: UpdatePageParams) {
 		if (!url.startsWith("/")) {
 			throw new Error("URL must start with /", { cause: { statusCode: 400 } });
 		}
-		const urlTaken = await db.page.findUnique({
-			where: { url: url },
+		const urlTaken = await db.page.findMany({
+			where: { url: url, id: { not: id } },
 		});
-		if (urlTaken) {
-			throw new Error("URL is already taken by another page", { cause: { statusCode: 400 } });
+		if (urlTaken.length > 0) {
+			throw new Error(
+				"URL is already taken by another page: " + urlTaken.map((p) => p.url).join(", "),
+				{ cause: { statusCode: 400 } },
+			);
 		}
 	}
 

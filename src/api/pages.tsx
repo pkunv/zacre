@@ -16,22 +16,23 @@ export const pagesRouter = {
 				description: z.string(),
 				url: z.string(),
 				layoutId: z.string(),
-				userId: z.string(),
-				isLocked: z.boolean(),
+				isLocked: z.boolean().optional(),
 				assignedFeature: z.nativeEnum(Feature).optional(),
 				role: z.enum(["admin", "user"]).nullable().optional(),
 			}),
 		}),
 		role: "admin",
 		handler: async (req, res) => {
+			console.log(req.data);
 			const { data, error } = await tryCatch(
 				createPage({
 					title: req.data.body.title,
 					description: req.data.body.description,
 					url: req.data.body.url,
 					layoutId: req.data.body.layoutId,
-					userId: req.data.body.userId,
-					isLocked: req.data.body.isLocked,
+					// since this route is matched against admin, we can safely assume the user is authenticated
+					userId: req.auth!.user.id,
+					isLocked: req.data.body.isLocked || false,
 					assignedFeature: req.data.body.assignedFeature,
 					role: req.data.body.role,
 				}),
@@ -142,7 +143,6 @@ export const pagesRouter = {
 				isActive: z.boolean().optional(),
 				assignedFeature: z.nativeEnum(Feature).optional(),
 				role: z.enum(["admin", "user"]).nullable().optional(),
-				userId: z.string(),
 			}),
 		}),
 		role: "admin",
@@ -157,7 +157,7 @@ export const pagesRouter = {
 					isActive: req.data.body.isActive,
 					assignedFeature: req.data.body.assignedFeature,
 					role: req.data.body.role,
-					userId: req.data.body.userId,
+					userId: req.auth!.user.id,
 				}),
 			);
 

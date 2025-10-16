@@ -1,9 +1,24 @@
-import { H2, P } from "@/components/modules-ui/typography";
+import { Button } from "@/components/modules-ui/button";
+import { H2, Muted, P } from "@/components/modules-ui/typography";
 import { Layout } from "@/lib/server/layouts/get";
+import { formatDate } from "@/lib/server/utils";
+import { JSX } from "preact/jsx-runtime";
 
-export function LayoutCard({ layout }: { layout: Layout }) {
+export function LayoutCard({
+	layout,
+	children,
+	className = "",
+}: {
+	layout: Layout;
+	children?: JSX.Element | JSX.Element[] | string;
+	className?: string;
+}) {
 	return (
-		<div class="flex flex-col gap-4 card bg-base-100 shadow-sm w-full max-w-3xl">
+		<div
+			class={`flex flex-col gap-4 card bg-base-100 shadow-sm w-full max-w-3xl ${className}`}
+			data-layout-id={layout.id}
+			data-layout-title={layout.title}
+		>
 			<div class="card-body">
 				<H2 className="card-title">{layout.title}</H2>
 				<div class="flex flex-row gap-4">
@@ -12,11 +27,16 @@ export function LayoutCard({ layout }: { layout: Layout }) {
 					))}
 				</div>
 				<P>{layout.description}</P>
-				<small>{layout.createdAt.toLocaleDateString()}</small>
+				<Muted>Created: {formatDate(layout.createdAt)}</Muted>
+				<Muted>Updated: {formatDate(layout.updatedAt)}</Muted>
 				<div class="card-actions justify-end">
-					<a className="btn btn-primary btn-edit" href={`/admin/layouts/${layout.id}`}>
-						<i class="w-4 h-4" data-lucide="pencil"></i>Edit
-					</a>
+					{!children ? (
+						<Button asLink href={`/admin/layouts/${layout.id}`} iconName="pencil">
+							Edit
+						</Button>
+					) : (
+						children
+					)}
 				</div>
 			</div>
 		</div>

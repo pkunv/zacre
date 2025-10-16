@@ -1,38 +1,11 @@
 import { initIcons } from "@/lib/client/icons";
 import { toast } from "@/lib/client/toast";
+import { lockModuleButtons, unlockModuleButtons } from "@/lib/client/utils";
 import { ClientModule, clientModules } from "@/modules/client";
 import { createAuthClient } from "better-auth/client";
 export const authClient = createAuthClient({
 	baseURL: window.location.origin,
 });
-
-export function lockModuleButtons(element: HTMLElement) {
-	const moduleButtons = element.querySelectorAll(
-		"button, input[type='submit']",
-	) as unknown as HTMLButtonElement[];
-	if (moduleButtons) {
-		moduleButtons.forEach((button) => {
-			button.disabled = true;
-			button.classList.add("btn-disabled");
-			const loadingIcon = document.createElement("span");
-			loadingIcon.classList.add("loading", "loading-spinner", "loading-md");
-			button.appendChild(loadingIcon);
-		});
-	}
-}
-
-export function unlockModuleButtons(element: HTMLElement) {
-	const moduleButtons = element.querySelectorAll(
-		"button, input[type='submit']",
-	) as unknown as HTMLButtonElement[];
-	if (moduleButtons) {
-		moduleButtons.forEach((button) => {
-			button.disabled = false;
-			button.classList.remove("btn-disabled");
-			button.querySelector("span.loading")?.remove();
-		});
-	}
-}
 
 export async function fetchModuleRender(elementId: string) {
 	const response = await fetch(`/api/layout-modules/${elementId}`);

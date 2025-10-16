@@ -54,12 +54,12 @@ export async function createLayout(params: CreateLayoutParams) {
 		});
 
 	for (const module of modules) {
-		if (!module.x || !module.y || !module.parameters) {
+		if (module.x === undefined || module.y === undefined) {
 			logMessage({
 				functionName: "createLayout",
-				message: `Warning: Module ${module.id} has no x or y position`,
+				message: `Warning: Module ${module.shortName} has no x or y position`,
 			});
-
+			console.log(module);
 			continue;
 		}
 		const layoutModule = await db.layoutModule.create({
@@ -70,13 +70,15 @@ export async function createLayout(params: CreateLayoutParams) {
 				y: module.y ?? 0,
 			},
 		});
-		await db.layoutModuleParameter.createMany({
-			data: module.parameters.map((p) => ({
-				layoutModuleId: layoutModule.id,
-				key: `${module.shortName}.${p.key}`,
-				value: p.value ?? "",
-			})),
-		});
+		if (module.parameters && module.parameters.length > 0) {
+			await db.layoutModuleParameter.createMany({
+				data: module.parameters.map((p) => ({
+					layoutModuleId: layoutModule.id,
+					key: `${module.shortName}.${p.key}`,
+					value: p.value ?? "",
+				})),
+			});
+		}
 	}
 
 	return layout;

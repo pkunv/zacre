@@ -1,3 +1,12 @@
+import { toast } from "@/lib/client/toast";
+import {
+	lockModuleButtons,
+	safeRedirect,
+	StandardResponse,
+	unlockModuleButtons,
+} from "@/lib/client/utils";
+import { AnyZodObject } from "zod/v3";
+
 type FormInput = {
 	element: HTMLInputElement;
 	isRequired: boolean;
@@ -51,4 +60,53 @@ export function validateFormInputs({
 	}
 
 	return success;
+}
+
+export async function submitForm({
+	element,
+	url,
+	method,
+	data,
+	schema,
+	redirectUrl,
+}: {
+	element: HTMLElement;
+	url: string;
+	method: "POST" | "PUT" | "DELETE";
+	data?: unknown;
+	schema?: AnyZodObject;
+	redirectUrl?: string;
+}) {
+	lockModuleButtons(element);
+
+	const result = schema?.safeParse(data);
+	if (result && !result.success) {
+		unlockModuleButtons(element);
+		toast.error(result.error.message || "Invalid form data");
+		return result.error;
+	}
+
+	const response = await fetch(url, {
+		method,
+		body: data ? JSON.stringify(data) : undefined,
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	if (!response.ok) {
+		const responseData = await response.json();
+		unlockModuleButtons(element);
+		toast.error(responseData.message || "An error occurred");
+		return responseData;
+	}
+	const responseData = (await response.json()) as StandardResponse<unknown>;
+	toast.success(
+		`${responseData.message ? responseData.message : "Form submitted successfully."} ${redirectUrl || responseData.url ? `You will be redirected shortly.` : ""}`,
+	);
+	unlockModuleButtons(element);
+	if (redirectUrl || responseData.url) {
+		safeRedirect(redirectUrl || responseData.url || "/");
+		return;
+	}
+	return responseData;
 }

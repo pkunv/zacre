@@ -142,7 +142,7 @@ async function main() {
 		isActive: true,
 		modules: [
 			{
-				id: modules.signIn.id,
+				id: modules["sign-in"].id,
 				x: 0,
 				y: 0,
 				parameters: [{ key: "isSignUpEnabled", value: "false" }],
@@ -155,8 +155,8 @@ async function main() {
 		description: "Admin",
 		isActive: true,
 		modules: [
-			{ id: modules.adminSidebar.id, x: 0, y: 0, parameters: [] },
-			{ id: modules.adminLayouts.id, x: 1, y: 0, parameters: [] },
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["admin-layouts"].id, x: 1, y: 0, parameters: [] },
 		],
 	});
 
@@ -165,8 +165,8 @@ async function main() {
 		description: "Admin layout form",
 		isActive: true,
 		modules: [
-			{ id: modules.adminSidebar.id, x: 0, y: 0, parameters: [] },
-			{ id: modules.layoutForm.id, x: 1, y: 0, parameters: [] },
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["layout-form"].id, x: 1, y: 0, parameters: [] },
 		],
 	});
 
@@ -175,8 +175,18 @@ async function main() {
 		description: "Admin pages",
 		isActive: true,
 		modules: [
-			{ id: modules.adminSidebar.id, x: 0, y: 0, parameters: [] },
-			{ id: modules.adminPages.id, x: 1, y: 0, parameters: [] },
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["admin-pages"].id, x: 1, y: 0, parameters: [] },
+		],
+	});
+
+	const adminPageForm = await createLayout({
+		title: "Admin page form",
+		description: "Admin page form",
+		isActive: true,
+		modules: [
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["page-form"].id, x: 1, y: 0, parameters: [] },
 		],
 	});
 
@@ -249,6 +259,28 @@ async function main() {
 		url: "/admin/pages",
 		role: "admin",
 		layoutId: adminPagesLayout.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Create page",
+		description: "Create a new page in admin panel",
+		url: "/admin/pages/new",
+		role: "admin",
+		layoutId: adminPageForm.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Edit page",
+		description: "Edit a page in admin panel",
+		url: "/admin/pages/:pageId",
+		role: "admin",
+		layoutId: adminPageForm.id,
 		userId: systemUserId,
 		isLocked: true,
 		assignedFeature: Feature.ADMIN,
