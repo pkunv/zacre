@@ -1,5 +1,6 @@
 import { submitForm } from "@/lib/client/form";
 import { toast } from "@/lib/client/toast";
+import { Page } from "@/lib/server/pages/get";
 import { ClientModule } from "@/modules/client";
 import { PageFormData } from "@/modules/page-form/server-page-form";
 import z from "zod/v3";
@@ -20,11 +21,11 @@ export const clientPageForm: ClientModule<PageFormData> = {
 		const layoutSearchInput = element.querySelector("#layout-search-input") as HTMLInputElement;
 		const layoutsList = element.querySelector("#layouts-list") as HTMLDivElement;
 		const deletePageBtn = element.querySelector("#delete-page-btn") as HTMLButtonElement;
-		const deletePageModal = element.querySelector("#delete-page-modal") as HTMLDialogElement;
+		const deletePageModal = document.querySelector("#delete-page-modal") as HTMLDialogElement;
 		const cancelDeletePageBtn = element.querySelector(
 			"#cancel-delete-page-btn",
 		) as HTMLButtonElement;
-		const confirmDeletePageBtn = element.querySelector(
+		const confirmDeletePageBtn = document.querySelector(
 			"#confirm-delete-page-btn",
 		) as HTMLButtonElement;
 
@@ -101,7 +102,7 @@ export const clientPageForm: ClientModule<PageFormData> = {
 				element,
 				url: `/api/pages/${pageId}`,
 				method: "DELETE",
-				redirectUrl: "/admin/pages",
+				redirectUrl: () => "/admin/pages",
 			});
 
 			deletePageModal.close();
@@ -134,6 +135,10 @@ export const clientPageForm: ClientModule<PageFormData> = {
 					layoutId,
 					isActive,
 					assignedFeature: assignedFeature === "" ? undefined : assignedFeature || undefined,
+				},
+				redirectUrl: (responseData) => {
+					const item = responseData.item as Page | null;
+					return item ? `/admin/pages/${item.id}` : `/admin/pages`;
 				},
 				schema: z.object({
 					title: z.string().min(3).max(128),

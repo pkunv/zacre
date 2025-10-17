@@ -42,6 +42,7 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 		);
 	},
 	render: async ({ element, req }) => {
+		console.log(req.data.query);
 		const { data, error } = await tryCatch(
 			getLayouts({
 				page: req.data.query.page ? parseInt(req.data.query.page) : undefined,
@@ -75,19 +76,24 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 						Create layout
 					</Button>
 				</div>
-				<Card className="w-full max-w-3xl">
-					<CardBody>
-						<CardTitle>Filters</CardTitle>
-						<Input
-							label="Search"
-							icon="search"
-							className="w-full"
-							id="search-input"
-							name="q"
-							placeholder="Search by title, description, modules..."
-						/>
-					</CardBody>
-				</Card>
+				<form method="get" action="/admin/layouts">
+					<Card className="w-full max-w-3xl">
+						<CardBody>
+							<CardTitle>Filters</CardTitle>
+							<Input
+								label="Search"
+								icon="search"
+								data-debounce="true"
+								data-debounce-timeout="500"
+								data-search-input="true"
+								className="w-full"
+								id="search-input"
+								name="q"
+								placeholder="Search by title, description, modules..."
+							/>
+						</CardBody>
+					</Card>
+				</form>
 				<div class="flex flex-col gap-4 layouts-container w-full max-w-3xl min-h-96 h-full">
 					{layouts.map((layout) => (
 						<LayoutCard layout={layout} />

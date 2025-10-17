@@ -75,7 +75,7 @@ export async function submitForm({
 	method: "POST" | "PUT" | "DELETE";
 	data?: unknown;
 	schema?: AnyZodObject;
-	redirectUrl?: string;
+	redirectUrl?: (responseData: StandardResponse<unknown>) => string;
 }) {
 	lockModuleButtons(element);
 
@@ -105,7 +105,7 @@ export async function submitForm({
 	);
 	unlockModuleButtons(element);
 	if (redirectUrl || responseData.url) {
-		safeRedirect(redirectUrl || responseData.url || "/");
+		safeRedirect(redirectUrl ? redirectUrl(responseData) : responseData.url || "/");
 		return;
 	}
 	return responseData;

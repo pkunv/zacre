@@ -11,7 +11,6 @@ import { ParameterTypeEnum } from "~/generated/prisma/client";
 export const layoutFormParameters = [] as const satisfies readonly ParameterDefinition<string>[];
 
 export type LayoutFormData = {
-	layout: Layout | null;
 	allParameterTypes: Array<{
 		key: string;
 		type: ParameterTypeEnum;
@@ -338,19 +337,6 @@ export const serverLayoutForm: ServerModule<
 		);
 	},
 	data: async (element, req) => {
-		const isEditMode =
-			req.data.params && req.data.params.layoutId && req.data.params.layoutId !== "new";
-
-		let layout: Layout | null = null;
-		if (isEditMode) {
-			layout = await db.layout.findFirst({
-				include: layoutIncludes,
-				where: {
-					id: req.data.params.layoutId,
-				},
-			});
-		}
-
 		const allParameterTypes = await db.parameterType.findMany({
 			select: {
 				key: true,
@@ -368,7 +354,6 @@ export const serverLayoutForm: ServerModule<
 		});
 
 		return {
-			layout,
 			allParameterTypes,
 			allModules,
 		} satisfies LayoutFormData;

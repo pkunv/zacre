@@ -97,25 +97,37 @@ type GetLayoutsParams = {
 export async function getLayouts(params: GetLayoutsParams): Promise<PaginatedResponse<Layout>> {
 	const { title, description, isActive, id, modules, page, limit, orderBy } = params;
 
+	// Build OR conditions for search fields
+	const orConditions: Prisma.LayoutWhereInput[] = [];
+
+	if (title) {
+		orConditions.push({ title: { contains: title, mode: "insensitive" } });
+	}
+
+	if (description) {
+		orConditions.push({ description: { contains: description, mode: "insensitive" } });
+	}
+
+	if (modules && modules.length > 0) {
+		orConditions.push({
+			modules: {
+				some: {
+					module: {
+						shortName: {
+							in: modules
+								.filter((m): m is { shortName: string; id?: string } => !!m.shortName)
+								.map((m) => m.shortName.toLowerCase()),
+						},
+					},
+				},
+			},
+		});
+	}
+
 	const whereClause = {
 		id,
-		title,
-		description,
 		isActive,
-		modules: {
-			some:
-				modules && modules.length > 0
-					? {
-							module: {
-								shortName: {
-									in: modules
-										.filter((m): m is { shortName: string; id?: string } => !!m.shortName)
-										.map((m) => m.shortName),
-								},
-							},
-						}
-					: undefined,
-		},
+		...(orConditions.length > 0 ? { OR: orConditions } : {}),
 	} satisfies Prisma.LayoutWhereInput;
 
 	const layouts = await db.layout.findMany({

@@ -468,10 +468,6 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 
 		// Delete layout functionality
 		deleteLayoutBtn.addEventListener("click", () => {
-			if (!data.layout) {
-				toast.error("Cannot delete a layout that hasn't been created yet");
-				return;
-			}
 			deleteLayoutModal.showModal();
 		});
 
@@ -492,7 +488,7 @@ export const clientLayoutForm: ClientModule<LayoutFormData> = {
 				element,
 				url: `/api/layouts/${layoutId}`,
 				method: "DELETE",
-				redirectUrl: "/admin/layouts",
+				redirectUrl: () => "/admin/layouts",
 			});
 
 			deleteLayoutModal.close();

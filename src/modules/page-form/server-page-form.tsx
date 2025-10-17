@@ -13,7 +13,6 @@ import { Feature } from "~/generated/prisma/client";
 export const pageFormParameters = [] as const satisfies readonly ParameterDefinition<string>[];
 
 export type PageFormData = {
-	page: Page | null;
 	allLayouts: Layout[];
 	features: string[];
 };
@@ -218,18 +217,6 @@ export const serverPageForm: ServerModule<typeof pageFormParameters, unknown> = 
 		);
 	},
 	data: async (element, req) => {
-		const isEditMode = req.data.params.pageId && req.data.params.pageId !== "new";
-
-		let page: Page | null = null;
-		if (isEditMode) {
-			page = await db.page.findFirst({
-				include: pageIncludes,
-				where: {
-					id: req.data.params.pageId,
-				},
-			});
-		}
-
 		const allLayouts = await db.layout.findMany({
 			include: layoutIncludes,
 		});
@@ -237,7 +224,6 @@ export const serverPageForm: ServerModule<typeof pageFormParameters, unknown> = 
 		const features = Object.values(Feature);
 
 		return {
-			page,
 			allLayouts,
 			features,
 		} satisfies PageFormData;
