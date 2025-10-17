@@ -42,7 +42,6 @@ export const serverAdminLayouts: ServerModule<typeof adminLayoutsParameters, unk
 		);
 	},
 	render: async ({ element, req }) => {
-		console.log(req.data.query);
 		const { data, error } = await tryCatch(
 			getLayouts({
 				page: req.data.query.page ? parseInt(req.data.query.page) : undefined,
