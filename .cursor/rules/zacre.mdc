@@ -1,0 +1,19 @@
+---
+description: Web builder in Express.js, Typescript and JSX
+globs:
+alwaysApply: true
+---
+
+Zacre is a simple web builder engine. It is based on ultimate-express which has almost the same API to Express.js. To allow building, editing and constructing web pages we divide the structure into 3 elements, from the bottom to up:
+
+1. Module: Single component of the page responsible mainly for one thing (navigation bar, footer, SaaS features overview, blog post, etc.)
+
+2. Layout: A subset of modules (called _layoutModules_) with their own positions and parameters. Can be reused for multiple pages.
+
+3. Page: Finalised object with title, description, required authentication role, assigned feature (blog related, admin panel related, e-commerce related, etc.) and connected layout that is presented when page is requested. Single page
+   does include parametrized URLs in the same way as Express.js does, by adding `:` prefix, for example: `/admin/layouts/:layoutId`, so a single page can represent many accessable URLs.
+
+- We use JSX only as a means to easily write, format and map through data in a readable way, only
+  to render it to an HTML string using preact-render-to-string, as this is more effective than HTML templates or so.
+
+- Files should be named in kebab-case.

@@ -4,7 +4,7 @@ import { HeroData } from "@/modules/hero/server-hero";
 export const clientNavbar: ClientModule<HeroData> = {
 	shortName: "navbar",
 	hasNoServerData: true,
-	clientInit: ({ data, element }) => {
+	clientInit: async ({ data, element }) => {
 		const searchInput = element.querySelector("input[type='text']");
 		if (searchInput) {
 			searchInput.classList.remove("skeleton");

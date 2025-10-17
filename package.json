@@ -1,14 +1,20 @@
 {
 	"name": "zacre",
 	"description": "Modular website builder",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
+		"db:reset": "prisma migrate reset --force --skip-seed",
 		"db:push": "prisma db push",
 		"db:seed": "esbuild ./prisma/seed.ts --bundle --minify --platform=node --format=esm --main-fields=module,main --outdir=dist --packages=external && prisma db seed",
 		"db:studio": "prisma studio",
-		"dev": "concurrently -r --handle-input --default-input-target 0  \"tsx watch src/index.tsx --clear-screen=false   \" \"npx tailwindcss -i ./src/style.css -o ./public/style.css --watch\"  \"esbuild ./src/client.ts --bundle --platform=browser --metafile=dist/client-bundle.meta.json --sourcemap --minify --watch --outbase=public --entry-names=main-[hash] --outdir=public\" "
+		"dev": "concurrently -r --handle-input --default-input-target 0  \"tsx watch src/index.tsx --clear-screen=false   \" \"npx tailwindcss -i ./src/style.css -o ./public/style.css --watch\"  \"esbuild ./src/client.ts --bundle --platform=browser --metafile=dist/client-bundle.meta.json --sourcemap --minify --tree-shaking=true --watch --outbase=public --entry-names=main-[hash] --outdir=public\" ",
+		"build:server": "esbuild ./src/index.tsx --bundle --platform=node --format=esm --sourcemap --minify --packages=external --outfile=dist/index.js",
+		"build:client": "esbuild ./src/client.ts --bundle --platform=browser --metafile=dist/client-bundle.meta.json --minify --tree-shaking=true --outbase=public --entry-names=main-[hash] --outdir=public",
+		"build:tailwind": "npx tailwindcss -i ./src/style.css -o ./public/style.css --minify",
+		"build": "npm run build:server && npm run build:client && npm run build:tailwind",
+		"start": "node ./dist/index.js"
 	},
 	"prisma": {
 		"seed": "node dist/seed.js"
@@ -22,6 +28,7 @@
 		"better-auth": "^1.3.8",
 		"compression": "^1.8.1",
 		"concurrently": "^9.2.1",
+		"cors": "^2.8.5",
 		"lucide": "^0.542.0",
 		"preact-render-to-string": "^6.6.1",
 		"tailwindcss": "^4.1.13",
@@ -30,6 +37,7 @@
 	},
 	"devDependencies": {
 		"@types/compression": "^1.8.1",
+		"@types/cors": "^2.8.19",
 		"@types/node": "^24.3.1",
 		"daisyui": "^5.1.7",
 		"dotenv": "^17.2.2",

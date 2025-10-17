@@ -2,15 +2,17 @@ import { JSX } from "preact/jsx-runtime";
 
 export function H1({
 	children,
+	className,
 	...props
 }: {
 	children: JSX.Element | string;
+	className?: string;
 	props?: JSX.HTMLAttributes<HTMLHeadingElement>;
 }) {
 	return (
 		<h1
 			{...props}
-			class="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance"
+			class={`scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance ${className}`}
 		>
 			{children}
 		</h1>
@@ -19,13 +21,18 @@ export function H1({
 
 export function H2({
 	children,
+	className,
 	...props
 }: {
 	children: JSX.Element | string;
+	className?: string;
 	props?: JSX.HTMLAttributes<HTMLHeadingElement>;
 }) {
 	return (
-		<h2 {...props} class="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+		<h2
+			{...props}
+			class={`scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0 ${className}`}
+		>
 			{children}
 		</h2>
 	);
@@ -69,6 +76,38 @@ export function P({
 		<p {...props} class="leading-7 [&:not(:first-child)]:mt-6">
 			{children}
 		</p>
+	);
+}
+
+export function Muted({
+	children,
+	className,
+	...props
+}: {
+	children: JSX.Element | string | (JSX.Element | string)[];
+	className?: string;
+	props?: JSX.HTMLAttributes<HTMLParagraphElement>;
+}) {
+	return (
+		<p {...props} class={`text-base-content/60 ${className}`}>
+			{children}
+		</p>
+	);
+}
+
+export function SmallMuted({
+	children,
+	className,
+	...props
+}: {
+	children: JSX.Element | string | (JSX.Element | string)[];
+	className?: string;
+	props?: JSX.HTMLAttributes<HTMLParagraphElement>;
+}) {
+	return (
+		<small {...props} class={`text-base-content/60 ${className}`}>
+			{children}
+		</small>
 	);
 }
 

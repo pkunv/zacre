@@ -1,7 +1,8 @@
 import { Cache } from "@/lib/server/cache";
 import { db } from "@/lib/server/db";
+import { LayoutModule } from "@/lib/server/layouts/get";
 import { logMessage } from "@/lib/server/log";
-import { ConfigParameter, LayoutModuleParameter } from "~/generated/prisma/client";
+import { ConfigParameter } from "~/generated/prisma/client";
 
 export const parameterKeys = [
 	"website.name",
@@ -18,7 +19,7 @@ export const parameterKeys = [
 export type ParameterKeys = (typeof parameterKeys)[number];
 
 // cached for 24 hours, will be invalidated after update
-const configParameterCache = new Cache<ConfigParameter>(24);
+export const configParameterCache = new Cache<ConfigParameter>(24);
 
 export const getConfigParameter = async (name: ParameterKeys) => {
 	const cachedParameter = configParameterCache.get(name);
@@ -76,7 +77,7 @@ export async function initializeParameters() {
 	);
 }
 
-export async function createParameter(name: ParameterKeys, value: string) {
+export async function createConfigParameter(name: ParameterKeys, value: string) {
 	await db.configParameter.upsert({
 		where: { key: name },
 		create: { key: name, value },
@@ -84,10 +85,10 @@ export async function createParameter(name: ParameterKeys, value: string) {
 	});
 }
 
-export function getModuleParameters(parameters: LayoutModuleParameter[]) {
-	const moduleParameters = parameters
+export function getLayoutModuleParameters(layoutModule: LayoutModule) {
+	const moduleParameters = layoutModule.parameters
 		.map((parameter) => ({
-			[parameter.key]: parameter.value,
+			[parameter.key.replace(`${layoutModule.module.shortName}.`, "")]: parameter.value,
 		}))
 		.reduce(
 			(acc, parameter) => {

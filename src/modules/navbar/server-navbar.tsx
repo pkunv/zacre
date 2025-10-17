@@ -14,16 +14,12 @@ export const serverNavbar: ServerModule<typeof navbarParameters> = {
 	description: "Main navigation bar - responsive and intuitive.",
 	parameters: navbarParameters,
 	createdAt: new Date("2025-09-14"),
-	loader: (element) => {
+	render: async ({ element }) => {
 		const image = element.parameters.titleImage;
 		const text = element.parameters.titleText;
 		const isSearchEnabled = element.parameters.isSearchEnabled;
 		return (
-			<div
-				class="navbar bg-base-200 fixed shadow-sm px-8 md:px-24 z-50"
-				data-module="navbar"
-				data-element-id={element.id}
-			>
+			<div class="navbar bg-base-200 fixed shadow-sm px-8 md:px-24 z-50">
 				<div class="flex-1">
 					{image && <img src={image} alt={text} class="w-full h-fit object-scale-down max-w-48" />}
 					{text && <a class="btn btn-ghost text-xl">{text}</a>}
@@ -33,20 +29,24 @@ export const serverNavbar: ServerModule<typeof navbarParameters> = {
 						<input type="text" placeholder="Search everything..." class="input input-bordered" />
 					)}
 					<ul class="menu menu-horizontal px-1">
-						{pages.map((page) => (
-							<li class="hidden md:block">
-								<a href={page.url}>{page.title}</a>
-							</li>
-						))}
+						{pages
+							.filter((page) => page.assignedFeature === null)
+							.map((page) => (
+								<li class="hidden md:block">
+									<a href={page.url}>{page.title}</a>
+								</li>
+							))}
 						<li class="md:hidden">
 							<details>
 								<summary>Menu</summary>
 								<ul class="bg-base-100 rounded-t-none p-2">
-									{pages.map((page) => (
-										<li>
-											<a href={page.url}>{page.title}</a>
-										</li>
-									))}
+									{pages
+										.filter((page) => page.assignedFeature === null)
+										.map((page) => (
+											<li>
+												<a href={page.url}>{page.title}</a>
+											</li>
+										))}
 								</ul>
 							</details>
 						</li>

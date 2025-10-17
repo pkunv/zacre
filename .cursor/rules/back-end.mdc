@@ -1,0 +1,53 @@
+---
+description: Back-end structure
+globs:
+alwaysApply: true
+---
+
+Zacre uses ultimate-express (same API as Express.js), better-auth and Prisma for back-end stuff.
+Going from the general view to specifics, we start from `src/index.tsx` where at the start of server process,
+we fetch pages data to the `src/index.tsx -> pages` variable from the Prisma. `pageIncludes` are required for this.
+This supplies us with data needed to render each page to their final HTML form. Whenever we would create a new page
+while running the server, remounting pages would be neccesary.
+We loop through every page and add it into Express `app` variable with a various middleware methods, that can be found
+in `src/lib/server/typed-router.ts`. Typed router uses Zod for validation, divided by params (url params), body (POST json body) and query (GET url search query params). New API methods should be placed in `src/api` directory, and created as an object with various keys that are defined with `createRoute` function, for example:
+
+```
+export const exampleRouter = {
+  get: createRoute({
+    schema: z.object({
+			params: z.object({
+				id: z.string(),
+			}),
+		}),
+    handler: async (req, res) => {
+      const id = req.parsed.id;
+
+      const {data, error} = await tryCatch(doSomething(id));
+
+      if (error) {
+				res
+					.status(
+						(typeof error.cause === "object" && error.cause && "statusCode" in error.cause
+							? (error.cause as { statusCode?: number }).statusCode
+							: undefined) || 500,
+					)
+					.json({ status: "error", message: error.message });
+				return;
+			}
+
+      // IMPORTANT: If our data response is an array, name the key "items", instead of "item".
+      res.json({status: "success", item: data});
+      return;
+    }
+  })
+}
+```
+
+- If endpoint data is paginated, response with "data" variable anyway, as it provides important pagination data.
+
+- Always use tryCatch() function for elegant catching errors.
+
+- Response JSON object should always have key "status" that is either "success" or "error", depending on the result of handlers function.
+
+- Based on handlers function and its response, final JSON object should have data be placed in "item" or "items" key, depending on data type (array or object).

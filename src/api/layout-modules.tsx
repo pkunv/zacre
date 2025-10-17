@@ -1,96 +1,115 @@
-import { db } from "@/lib/server/db";
-import { layoutModuleIncludes } from "@/lib/server/layout";
-import { getModuleParameters } from "@/lib/server/parameter";
-import { createRoute } from "@/lib/server/typed-router";
-import { serverModules } from "@/modules/server";
+import { executeLayoutModuleAction } from "@/lib/server/layout-modules/action";
+import { getLayoutModulesData } from "@/lib/server/layout-modules/get";
+import { renderLayoutModule } from "@/lib/server/layout-modules/render";
+import { createRoute, RouterRequest } from "@/lib/server/typed-router";
+import { tryCatch } from "@/lib/server/utils";
 import { z } from "zod/v3";
-
 export const layoutModulesRouter = {
-	getMany: createRoute({
-		handler: async (req, res) => {
-			const elementIds = req.parsed.query.elementIds;
-
-			const layoutModules = await db.layoutModule.findMany({
-				where: {
-					id: {
-						in: Array.isArray(elementIds) ? elementIds : [elementIds],
-					},
-				},
-				include: layoutModuleIncludes,
-			});
-
-			const elements = layoutModules.map((module) => {
-				return {
-					...module,
-					serverModule: serverModules.find((m) => m.shortName === module.module.shortName),
-					parameters: getModuleParameters(module.parameters),
-				};
-			});
-
-			const data = await Promise.all(
-				elements.map(async (e) => {
-					if (e.serverModule === undefined) {
-						return {
-							id: e.id,
-							data: null,
-						};
-					}
-					if (e.serverModule.data === undefined) {
-						return {
-							id: e.id,
-							data: null,
-						};
-					}
-					// @ts-ignore
-					return { id: e.id, data: await e.serverModule.data(e) };
-				}),
-			);
-
-			res.json({ status: "success", items: data });
-		},
-		schema: z.object({
-			query: z.object({
-				elementIds: z.union([z.coerce.string(), z.array(z.coerce.string())]),
-			}),
-		}),
-	}),
-	get: createRoute({
-		handler: async (req, res) => {
-			const elementId = req.parsed.params.elementId;
-
-			const layoutModule = await db.layoutModule.findUnique({
-				include: layoutModuleIncludes,
-				where: {
-					id: elementId,
-				},
-			});
-
-			if (!layoutModule) {
-				res.status(404).json({ status: "error", message: "Layout module not found" });
-				return;
-			}
-
-			const element = {
-				...layoutModule,
-				parameters: getModuleParameters(layoutModule.parameters),
-			};
-
-			const serverModule = serverModules.find((m) => m.shortName === layoutModule.module.shortName);
-
-			if (!serverModule || !serverModule.data) {
-				res.status(404).json({ status: "error", message: "Server module not found" });
-				return;
-			}
-
-			// @ts-ignore
-			const data = await serverModule.data(element);
-
-			res.json({ status: "success", item: element });
-		},
+	render: createRoute({
 		schema: z.object({
 			params: z.object({
 				elementId: z.string(),
 			}),
 		}),
+		handler: async (req, res) => {
+			const { data, error } = await tryCatch(
+				renderLayoutModule({
+					elementId: req.data.params.elementId,
+					req: req as unknown as RouterRequest,
+				}),
+			);
+
+			if (error) {
+				res
+					.status(
+						(typeof error.cause === "object" && error.cause && "statusCode" in error.cause
+							? (error.cause as { statusCode?: number }).statusCode
+							: undefined) || 500,
+					)
+					.json({ status: "error", message: error.message });
+				return;
+			}
+
+			// Convert VNode to HTML string before sending to client
+			res.setHeader("Content-Type", "text/html");
+			res.send(data);
+			return;
+		},
+	}),
+	get: createRoute({
+		schema: z.object({
+			query: z.object({
+				elementIds: z.union([z.coerce.string(), z.array(z.coerce.string())]),
+			}),
+		}),
+		handler: async (req, res) => {
+			const elementIds: string[] = req.data.query.elementIds.includes(",")
+				? // @ts-expect-error we don't need to type the request
+					req.data.query.elementIds.split(",")
+				: [req.data.query.elementIds];
+
+			const { data, error } = await tryCatch(
+				getLayoutModulesData({
+					elementIds,
+					req: req as unknown as RouterRequest,
+				}),
+			);
+			if (error) {
+				res
+					.status(
+						(typeof error.cause === "object" && error.cause && "statusCode" in error.cause
+							? (error.cause as { statusCode?: number }).statusCode
+							: undefined) || 500,
+					)
+					.json({ status: "error", message: error.message });
+				return;
+			}
+			if (data === null) {
+				res.status(404).json({ status: "error", message: "Layout modules data not found" });
+				return;
+			}
+
+			res.json({ status: "success", items: data });
+		},
+	}),
+	action: createRoute({
+		schema: z.object({
+			params: z.object({
+				elementId: z.string(),
+			}),
+		}),
+		// Schema is validated in the function
+		//schema: serverModules.map((m) => m.actionSchema).filter((m) => m !== undefined).reduce((acc, m) => acc.concat(m), z.object({})),
+		handler: async (req, res) => {
+			const { data, error } = await tryCatch(
+				executeLayoutModuleAction({
+					elementId: req.data.params.elementId,
+					data: req.body,
+					req: req as unknown as RouterRequest,
+				}),
+			);
+
+			if (error) {
+				res
+					.status(
+						(typeof error.cause === "object" && error.cause && "statusCode" in error.cause
+							? (error.cause as { statusCode?: number }).statusCode
+							: undefined) || 500,
+					)
+					.json({ status: "error", message: error.message });
+				return;
+			}
+
+			if (data && data.status !== undefined && data.status === "redirect") {
+				res
+					.status(302)
+					.json({ status: "redirect", message: data.message, url: data.url, item: data });
+
+				return;
+			}
+
+			res.json({ status: "success", item: data });
+			return;
+		},
 	}),
 };

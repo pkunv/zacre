@@ -1,18 +1,22 @@
 import { Session } from "@/auth";
 import { authMiddleware } from "@/lib/server/auth";
 import { validateRequest } from "@/lib/server/validate-request";
-import { NextFunction, Request, RequestHandler, Response } from "ultimate-express";
+import express, { NextFunction, Request, RequestHandler, Response } from "ultimate-express";
 import { AnyZodObject } from "zod/v3";
 
 export type RouterRequest = Request & {
-	data: unknown;
+	data: {
+		params: Record<string, string>;
+		query: Record<string, string>;
+		body: unknown;
+	};
 	auth: Session | null;
 	role?: string | string[];
 };
 
 // Type for a validated request handler
 export type ValidatedHandler<T extends AnyZodObject> = (
-	req: Request & { parsed: T["_output"]; auth: Session | null },
+	req: Request & { data: T["_output"]; auth: Session | null },
 	res: Response,
 	next: NextFunction,
 ) => Promise<void> | void;
@@ -52,9 +56,12 @@ export function createMiddleware<T extends AnyZodObject>(
 	route: RouteDefinition<T>,
 ): RequestHandler[] {
 	return [
+		express.json(),
 		validateRequest(route.schema),
-		passRoleMiddleware(route.role),
-		authMiddleware as unknown as RequestHandler,
+		// @ts-ignore
+		(req: Request & { auth: Session | null }, res: Response, next: NextFunction) => {
+			authMiddleware(req, res, next, route.role);
+		},
 		route.handler as unknown as RequestHandler,
 	];
 }

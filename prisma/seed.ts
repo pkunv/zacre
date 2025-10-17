@@ -1,41 +1,52 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/server/db";
+import { createLayout } from "@/lib/server/layouts/create";
 import { logMessage } from "@/lib/server/log";
-import { createParameter, initializeParameters } from "@/lib/server/parameter";
+import { createPage } from "@/lib/server/pages/create";
+import { createConfigParameter, initializeParameters } from "@/lib/server/parameter";
 import { serverModules } from "@/modules/server";
+import { Feature, Module, ParameterTypeEnum } from "~/generated/prisma/client";
 
 async function main() {
 	logMessage({ functionName: "seed", message: "Starting seed...", appendToLogFile: true });
 	const startTime = performance.now();
 
-	// Create a system user for seeding
-	const systemUser = await db.user.upsert({
+	const existingSystemUser = await db.user.findUnique({
 		where: {
-			email: "system@zacre.local",
+			email: "admin@zacre.local",
 		},
-		create: {
-			id: "system-user",
-			name: "System User",
-			email: "system@zacre.local",
-			emailVerified: true,
-		},
-		update: {},
 	});
+
+	let systemUserId: string | null = null;
+	if (existingSystemUser) {
+		systemUserId = existingSystemUser.id;
+	} else {
+		const systemUser = await auth.api.createUser({
+			body: {
+				email: "admin@zacre.local", // required
+				password: "admin", // required
+				name: "Admin", // required
+				role: "admin",
+			},
+		});
+		systemUserId = systemUser.user.id;
+	}
 
 	await initializeParameters();
 
-	await createParameter("website.name", "Zacre");
-	await createParameter(
+	await createConfigParameter("website.name", "Zacre");
+	await createConfigParameter(
 		"website.description",
 		"Modular website builder for personal websites, small businesses and more.",
 	);
-	await createParameter(
+	await createConfigParameter(
 		"website.keywords",
 		"zacre, website builder, modular website, personal website, small business website, node.js, kunv, wordpress",
 	);
-	await createParameter("website.author", "Piotr Kuncy (KUNV)");
-	await createParameter("website.logo", "/default-logo.webp");
-	await createParameter("website.favicon", "/favicon.ico");
-	await createParameter("website.theme", "emerald");
+	await createConfigParameter("website.author", "Piotr Kuncy (KUNV)");
+	await createConfigParameter("website.logo", "/default-logo.webp");
+	await createConfigParameter("website.favicon", "/favicon.ico");
+	await createConfigParameter("website.theme", "emerald");
 
 	for (const module of serverModules) {
 		await db.module.upsert({
@@ -55,159 +66,224 @@ async function main() {
 			},
 		});
 
-		for (const parameter of module.parameters) {
+		for (const parameter of module.parameters || []) {
 			await db.parameterType.upsert({
 				where: {
-					key: parameter.key,
+					key: `${module.shortName}.${parameter.key}`,
 				},
 				create: {
-					key: parameter.key,
+					key: `${module.shortName}.${parameter.key}`,
+					type: (parameter as any).type ?? ParameterTypeEnum.STRING,
+					isRequired: (parameter as any).isRequired ?? false,
+					isSelect: (parameter as any).isSelect ?? false,
+					selectValues: (parameter as any).selectValues ?? null,
+					schema: (parameter as any).schema ?? null,
 				},
 				update: {},
 			});
 		}
 	}
 
-	const heroModule = await db.module.findFirst({
-		where: {
-			shortName: "hero",
-		},
-	});
-
-	const navbarModule = await db.module.findFirst({
-		where: {
-			shortName: "navbar",
-		},
-	});
-
-	const footerModule = await db.module.findFirst({
-		where: {
-			shortName: "footer",
-		},
-	});
-
-	const homeLayout = await db.layout.upsert({
-		where: {
-			id: "home",
-		},
-		create: {
-			id: "home",
-			title: "Home",
-			description: "Home",
-			isActive: true,
-			isDeleted: false,
-			isPublic: false,
-			isPublished: false,
-		},
-		update: {},
-	});
-
-	await db.layoutModule.deleteMany({
-		where: {
-			layoutId: homeLayout.id,
-		},
-	});
-
-	await db.layoutModule.create({
-		data: {
-			layoutId: homeLayout.id,
-			moduleId: heroModule!.id,
-			parameters: {
-				createMany: {
-					data: [
-						{
-							key: "title",
-							value: "Lightweight and fast website builder. Small Wordpress alternative.",
-						},
-						{
-							key: "description",
-							value: "Built by Kunv",
-						},
-						{
-							key: "primaryButtonText",
-							value: "Deploy now",
-						},
-						{
-							key: "primaryButtonLink",
-							value: "/deploy",
-						},
-						{
-							key: "secondaryButtonText",
-							value: "Learn more",
-						},
-						{
-							key: "secondaryButtonLink",
-							value: "/features",
-						},
-						{
-							key: "image",
-							value: "/logo-sm.webp",
-						},
-					],
-				},
+	const modules = await db.module.findMany().then((modules) =>
+		modules.reduce(
+			(acc, module) => {
+				acc[module.shortName] = module;
+				return acc;
 			},
-		},
-	});
+			{} as Record<string, Module>,
+		),
+	);
 
-	await db.layoutModule.create({
-		data: {
-			layoutId: homeLayout.id,
-			moduleId: navbarModule!.id,
-			parameters: {
-				createMany: {
-					data: [
-						{
-							key: "titleImage",
-							value: "/default-logo.webp",
-						},
-					],
-				},
+	const homeLayout = await createLayout({
+		title: "Home",
+		description: "Home",
+		isActive: true,
+		modules: [
+			{
+				id: modules.navbar.id,
+				x: 0,
+				y: 0,
+				parameters: [{ key: "titleImage", value: "/default-logo.webp" }],
 			},
-		},
-	});
-
-	await db.layoutModule.create({
-		data: {
-			layoutId: homeLayout.id,
-			moduleId: footerModule!.id,
-			parameters: {
-				createMany: {
-					data: [
-						{
-							key: "copyrightText",
-							value: "Copyright 2025 Zacre. All rights reserved.",
-						},
-						{
-							key: "linkedinLink",
-							value: "https://www.linkedin.com/in/piotr-kuncy-1a4618237/",
-						},
-						{
-							key: "githubLink",
-							value: "https://github.com/pkunv/zacre",
-						},
-						{
-							key: "emailAddress",
-							value: "kuncypiotr@gmail.com",
-						},
-					],
-				},
+			{
+				id: modules.hero.id,
+				x: 0,
+				y: 1,
+				parameters: [
+					{
+						key: "title",
+						value: "Lightweight and fast website builder. Small Wordpress alternative.",
+					},
+					{ key: "description", value: "Built by Kunv" },
+					{ key: "primaryButtonText", value: "Deploy now" },
+					{ key: "primaryButtonLink", value: "/deploy" },
+					{ key: "secondaryButtonText", value: "Learn more" },
+					{ key: "secondaryButtonLink", value: "/features" },
+					{ key: "image", value: "/logo-sm.webp" },
+				],
 			},
-		},
+			{
+				id: modules.footer.id,
+				x: 0,
+				y: 2,
+				parameters: [
+					{ key: "copyrightText", value: "Copyright 2025 Zacre. All rights reserved." },
+					{ key: "linkedinLink", value: "https://www.linkedin.com/in/piotr-kuncy-1a4618237/" },
+					{ key: "githubLink", value: "https://github.com/pkunv/zacre" },
+					{ key: "emailAddress", value: "kuncypiotr@gmail.com" },
+				],
+			},
+		],
 	});
 
-	await db.page.upsert({
-		where: {
-			url: "/",
-		},
-		create: {
-			url: "/",
-			title: "Home",
-			description: "Home",
-			layoutId: homeLayout.id,
-			createdById: systemUser.id,
-			updatedById: systemUser.id,
-		},
-		update: {},
+	const signInLayout = await createLayout({
+		title: "Sign In",
+		description: "Sign In",
+		isActive: true,
+		modules: [
+			{
+				id: modules["sign-in"].id,
+				x: 0,
+				y: 0,
+				parameters: [{ key: "isSignUpEnabled", value: "false" }],
+			},
+		],
+	});
+
+	const adminLayoutLayouts = await createLayout({
+		title: "Admin",
+		description: "Admin",
+		isActive: true,
+		modules: [
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["admin-layouts"].id, x: 1, y: 0, parameters: [] },
+		],
+	});
+
+	const adminLayoutForm = await createLayout({
+		title: "Admin layout form",
+		description: "Admin layout form",
+		isActive: true,
+		modules: [
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["layout-form"].id, x: 1, y: 0, parameters: [] },
+		],
+	});
+
+	const adminPagesLayout = await createLayout({
+		title: "Admin pages",
+		description: "Admin pages",
+		isActive: true,
+		modules: [
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["admin-pages"].id, x: 1, y: 0, parameters: [] },
+		],
+	});
+
+	const adminPageForm = await createLayout({
+		title: "Admin page form",
+		description: "Admin page form",
+		isActive: true,
+		modules: [
+			{ id: modules["admin-sidebar"].id, x: 0, y: 0, parameters: [] },
+			{ id: modules["page-form"].id, x: 1, y: 0, parameters: [] },
+		],
+	});
+
+	await createPage({
+		title: "Home",
+		description: "Home",
+		url: "/",
+		layoutId: homeLayout.id,
+		userId: systemUserId,
+		isLocked: true,
+	});
+
+	await createPage({
+		title: "Sign In",
+		description: "Sign In",
+		url: "/sign-in",
+		layoutId: signInLayout.id,
+		userId: systemUserId,
+		isLocked: false,
+		assignedFeature: Feature.AUTH,
+	});
+
+	await createPage({
+		title: "Admin",
+		description: "Admin panel to manage your website",
+		url: "/admin",
+		role: "admin",
+		layoutId: adminLayoutLayouts.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Layouts",
+		description: "List of layouts on your website to use in pages",
+		url: "/admin/layouts",
+		role: "admin",
+		layoutId: adminLayoutLayouts.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Edit layout",
+		description: "Edit a layout in admin panel",
+		url: "/admin/layouts/:layoutId",
+		role: "admin",
+		layoutId: adminLayoutForm.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Create layout",
+		description: "Create a new layout in admin panel",
+		url: "/admin/layouts/new",
+		role: "admin",
+		layoutId: adminLayoutForm.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Pages",
+		description: "List of pages on your website",
+		url: "/admin/pages",
+		role: "admin",
+		layoutId: adminPagesLayout.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Create page",
+		description: "Create a new page in admin panel",
+		url: "/admin/pages/new",
+		role: "admin",
+		layoutId: adminPageForm.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
+	});
+
+	await createPage({
+		title: "Edit page",
+		description: "Edit a page in admin panel",
+		url: "/admin/pages/:pageId",
+		role: "admin",
+		layoutId: adminPageForm.id,
+		userId: systemUserId,
+		isLocked: true,
+		assignedFeature: Feature.ADMIN,
 	});
 
 	logMessage({
